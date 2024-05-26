@@ -1,0 +1,12 @@
+{
+    "finandy_url": "https://googl2e.com",
+    "webhooks": [
+        {
+            "webhook": "123123",
+            "delay": 22
+        }
+    ],
+    "received_hooks": [],
+    "blocked_hooks": 0,
+    "domain": "https://localhost"
+}
