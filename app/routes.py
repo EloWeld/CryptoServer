@@ -35,7 +35,7 @@ def add_webhook():
         settings = load_settings()
         settings['webhooks'].append({"webhook": webhook, "delay": delay})
         save_settings(settings)
-        return redirect(url_for('index'))
+        return redirect('/')
     return render_template('add_webhook.html')
 
 @main.route('/settings', methods=['GET', 'POST'])
@@ -47,7 +47,7 @@ def settings_page():
         settings['finandy_url'] = finandy_url
         settings['domain'] = domain
         save_settings(settings)
-        return redirect(url_for('index'))
+        return redirect('/')
     settings = load_settings()
     return render_template('settings.html', settings=settings)
 
@@ -89,7 +89,7 @@ def get_bybit_tickers():
 def get_volume_spikes():
     exchange = ccxt.bybit()
     tickers = get_bybit_tickers()
-    tickers = tickers[:300]
+    tickers = tickers
     spikes = []
     
     for i, ticker in enumerate(tickers):
@@ -100,7 +100,7 @@ def get_volume_spikes():
         prev_candle, curr_candle = ohlcv[-2], ohlcv[-1]
         prev_volume, curr_volume = prev_candle[5], curr_candle[5]
         
-        if curr_volume >= 5 * prev_volume:
+        if curr_volume >= 5 * prev_volume and prev_volume != 0:
             spikes.append({
                 'pair': ticker,
                 'prev_volume': prev_volume,

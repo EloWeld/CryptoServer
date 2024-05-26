@@ -1,0 +1,884 @@
+[
+    {
+        "pair": "BTCUSDT",
+        "prev_volume": 0,
+        "curr_volume": 17.641,
+        "time": 1716749594
+    },
+    {
+        "pair": "ETHUSDT",
+        "prev_volume": 0,
+        "curr_volume": 11389.28,
+        "time": 1716749594
+    },
+    {
+        "pair": "XRPUSDT",
+        "prev_volume": 0,
+        "curr_volume": 28985829.0,
+        "time": 1716749594
+    },
+    {
+        "pair": "EOSUSDT",
+        "prev_volume": 0,
+        "curr_volume": 1895888.6,
+        "time": 1716749594
+    },
+    {
+        "pair": "DOTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 510538.1,
+        "time": 1716749594
+    },
+    {
+        "pair": "XLMUSDT",
+        "prev_volume": 0,
+        "curr_volume": 13142203.0,
+        "time": 1716749600
+    },
+    {
+        "pair": "LTCUSDT",
+        "prev_volume": 0,
+        "curr_volume": 38970.6,
+        "time": 1716749600
+    },
+    {
+        "pair": "DOGEUSDT",
+        "prev_volume": 0,
+        "curr_volume": 123023210.0,
+        "time": 1716749600
+    },
+    {
+        "pair": "CHZUSDT",
+        "prev_volume": 0,
+        "curr_volume": 553204.0,
+        "time": 1716749600
+    },
+    {
+        "pair": "AXSUSDT",
+        "prev_volume": 0,
+        "curr_volume": 277273.7,
+        "time": 1716749600
+    },
+    {
+        "pair": "MANAUSDT",
+        "prev_volume": 0,
+        "curr_volume": 122729.4,
+        "time": 1716749605
+    },
+    {
+        "pair": "DYDXUSDT",
+        "prev_volume": 0,
+        "curr_volume": 80246.1,
+        "time": 1716749605
+    },
+    {
+        "pair": "MKRUSDT",
+        "prev_volume": 0,
+        "curr_volume": 22.82,
+        "time": 1716749605
+    },
+    {
+        "pair": "COMPUSDT",
+        "prev_volume": 0,
+        "curr_volume": 36230.57,
+        "time": 1716749605
+    },
+    {
+        "pair": "AAVEUSDT",
+        "prev_volume": 0,
+        "curr_volume": 10421.05,
+        "time": 1716749605
+    },
+    {
+        "pair": "YFIUSDT",
+        "prev_volume": 0,
+        "curr_volume": 6.2185,
+        "time": 1716749610
+    },
+    {
+        "pair": "LINKUSDT",
+        "prev_volume": 0,
+        "curr_volume": 418668.1,
+        "time": 1716749610
+    },
+    {
+        "pair": "SUSHIUSDT",
+        "prev_volume": 0,
+        "curr_volume": 887132.7,
+        "time": 1716749610
+    },
+    {
+        "pair": "UNIUSDT",
+        "prev_volume": 0,
+        "curr_volume": 17761.4,
+        "time": 1716749610
+    },
+    {
+        "pair": "KSMUSDT",
+        "prev_volume": 0,
+        "curr_volume": 668.25,
+        "time": 1716749610
+    },
+    {
+        "pair": "ICPUSDT",
+        "prev_volume": 0,
+        "curr_volume": 225463.8,
+        "time": 1716749615
+    },
+    {
+        "pair": "ADAUSDT",
+        "prev_volume": 0,
+        "curr_volume": 4051135.0,
+        "time": 1716749615
+    },
+    {
+        "pair": "ETCUSDT",
+        "prev_volume": 0,
+        "curr_volume": 119372.9,
+        "time": 1716749615
+    },
+    {
+        "pair": "KLAYUSDT",
+        "prev_volume": 0,
+        "curr_volume": 192860.2,
+        "time": 1716749615
+    },
+    {
+        "pair": "XTZUSDT",
+        "prev_volume": 0,
+        "curr_volume": 981190.8,
+        "time": 1716749615
+    },
+    {
+        "pair": "BCHUSDT",
+        "prev_volume": 0,
+        "curr_volume": 11779.96,
+        "time": 1716749620
+    },
+    {
+        "pair": "QNTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 168.25,
+        "time": 1716749620
+    },
+    {
+        "pair": "USDCUSDT",
+        "prev_volume": 0,
+        "curr_volume": 342150.8,
+        "time": 1716749620
+    },
+    {
+        "pair": "GRTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 311279.4,
+        "time": 1716749620
+    },
+    {
+        "pair": "SOLUSDT",
+        "prev_volume": 0,
+        "curr_volume": 304060.5,
+        "time": 1716749625
+    },
+    {
+        "pair": "FILUSDT",
+        "prev_volume": 0,
+        "curr_volume": 1101525.0,
+        "time": 1716749625
+    },
+    {
+        "pair": "OMGUSDT",
+        "prev_volume": 0,
+        "curr_volume": 1234912.7,
+        "time": 1716749625
+    },
+    {
+        "pair": "BATUSDT",
+        "prev_volume": 0,
+        "curr_volume": 149660.2,
+        "time": 1716749625
+    },
+    {
+        "pair": "ZRXUSDT",
+        "prev_volume": 0,
+        "curr_volume": 46093.0,
+        "time": 1716749625
+    },
+    {
+        "pair": "CRVUSDT",
+        "prev_volume": 0,
+        "curr_volume": 121387.6,
+        "time": 1716749630
+    },
+    {
+        "pair": "AGLDUSDT",
+        "prev_volume": 0,
+        "curr_volume": 21062.3,
+        "time": 1716749630
+    },
+    {
+        "pair": "ANKRUSDT",
+        "prev_volume": 0,
+        "curr_volume": 1472808.0,
+        "time": 1716749630
+    },
+    {
+        "pair": "PERPUSDT",
+        "prev_volume": 0,
+        "curr_volume": 205977.0,
+        "time": 1716749630
+    },
+    {
+        "pair": "MATICUSDT",
+        "prev_volume": 0,
+        "curr_volume": 8541741.0,
+        "time": 1716749630
+    },
+    {
+        "pair": "WAVESUSDT",
+        "prev_volume": 0,
+        "curr_volume": 21250.5,
+        "time": 1716749635
+    },
+    {
+        "pair": "ALGOUSDT",
+        "prev_volume": 0,
+        "curr_volume": 14416948.1,
+        "time": 1716749640
+    },
+    {
+        "pair": "ENJUSDT",
+        "prev_volume": 0,
+        "curr_volume": 117134.3,
+        "time": 1716749640
+    },
+    {
+        "pair": "WOOUSDT",
+        "prev_volume": 0,
+        "curr_volume": 132706.3,
+        "time": 1716749645
+    },
+    {
+        "pair": "GODSUSDT",
+        "prev_volume": 0,
+        "curr_volume": 509698.0,
+        "time": 1716749645
+    },
+    {
+        "pair": "IMXUSDT",
+        "prev_volume": 0,
+        "curr_volume": 35390.9,
+        "time": 1716749645
+    },
+    {
+        "pair": "ENSUSDT",
+        "prev_volume": 0,
+        "curr_volume": 4018.2,
+        "time": 1716749645
+    },
+    {
+        "pair": "BOBAUSDT",
+        "prev_volume": 0,
+        "curr_volume": 8508.5,
+        "time": 1716749665
+    },
+    {
+        "pair": "JASMYUSDT",
+        "prev_volume": 0,
+        "curr_volume": 3146939.0,
+        "time": 1716749665
+    },
+    {
+        "pair": "GALAUSDT",
+        "prev_volume": 0,
+        "curr_volume": 7646874.0,
+        "time": 1716749665
+    },
+    {
+        "pair": "RNDRUSDT",
+        "prev_volume": 0,
+        "curr_volume": 487477.9,
+        "time": 1716749665
+    },
+    {
+        "pair": "HOTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 11457000.0,
+        "time": 1716749675
+    },
+    {
+        "pair": "1INCHUSDT",
+        "prev_volume": 0,
+        "curr_volume": 165889.5,
+        "time": 1716749680
+    },
+    {
+        "pair": "LOOKSUSDT",
+        "prev_volume": 0,
+        "curr_volume": 72636.0,
+        "time": 1716749715
+    },
+    {
+        "pair": "GMXUSDT",
+        "prev_volume": 0,
+        "curr_volume": 289.99,
+        "time": 1716749725
+    },
+    {
+        "pair": "TUSDT",
+        "prev_volume": 0,
+        "curr_volume": 103190.0,
+        "time": 1716749725
+    },
+    {
+        "pair": "ACHUSDT",
+        "prev_volume": 0,
+        "curr_volume": 1577670.0,
+        "time": 1716749725
+    },
+    {
+        "pair": "JSTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 8163590.0,
+        "time": 1716749725
+    },
+    {
+        "pair": "SUNUSDT",
+        "prev_volume": 0,
+        "curr_volume": 31410.0,
+        "time": 1716749725
+    },
+    {
+        "pair": "TRXUSDT",
+        "prev_volume": 0,
+        "curr_volume": 3999908.0,
+        "time": 1716749730
+    },
+    {
+        "pair": "BNBUSDT",
+        "prev_volume": 0,
+        "curr_volume": 65.57,
+        "time": 1716749740
+    },
+    {
+        "pair": "NEARUSDT",
+        "prev_volume": 0,
+        "curr_volume": 9898.4,
+        "time": 1716749740
+    },
+    {
+        "pair": "PAXGUSDT",
+        "prev_volume": 0,
+        "curr_volume": 4.924,
+        "time": 1716749740
+    },
+    {
+        "pair": "CELOUSDT",
+        "prev_volume": 0,
+        "curr_volume": 10743.2,
+        "time": 1716749760
+    },
+    {
+        "pair": "APEXUSDT",
+        "prev_volume": 0,
+        "curr_volume": 4304.8,
+        "time": 1716749765
+    },
+    {
+        "pair": "ARUSDT",
+        "prev_volume": 0,
+        "curr_volume": 27659.8,
+        "time": 1716749810
+    },
+    {
+        "pair": "KDAUSDT",
+        "prev_volume": 0,
+        "curr_volume": 3527.2,
+        "time": 1716749810
+    },
+    {
+        "pair": "ROSEUSDT",
+        "prev_volume": 0,
+        "curr_volume": 4140939.0,
+        "time": 1716749810
+    },
+    {
+        "pair": "HFTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 36343.0,
+        "time": 1716749845
+    },
+    {
+        "pair": "HOOKUSDT",
+        "prev_volume": 0,
+        "curr_volume": 24312.9,
+        "time": 1716749850
+    },
+    {
+        "pair": "RDNTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 88929.0,
+        "time": 1716749865
+    },
+    {
+        "pair": "BLURUSDT",
+        "prev_volume": 0,
+        "curr_volume": 147095.0,
+        "time": 1716749865
+    },
+    {
+        "pair": "IDUSDT",
+        "prev_volume": 0,
+        "curr_volume": 48506.0,
+        "time": 1716749880
+    },
+    {
+        "pair": "ARBUSDT",
+        "prev_volume": 0,
+        "curr_volume": 3286681.3,
+        "time": 1716749880
+    },
+    {
+        "pair": "EOSUSDT",
+        "prev_volume": 1895888.6,
+        "curr_volume": 20110849.799999997,
+        "time": 1716749894
+    },
+    {
+        "pair": "ETHUSDT",
+        "prev_volume": 11389.28,
+        "curr_volume": 460532.9199999999,
+        "time": 1716749898
+    },
+    {
+        "pair": "MNTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 50312.0,
+        "time": 1716749910
+    },
+    {
+        "pair": "LTCUSDT",
+        "prev_volume": 38970.6,
+        "curr_volume": 757277.6,
+        "time": 1716749911
+    },
+    {
+        "pair": "LINKUSDT",
+        "prev_volume": 418668.1,
+        "curr_volume": 4749575.0,
+        "time": 1716749911
+    },
+    {
+        "pair": "AXSUSDT",
+        "prev_volume": 277273.7,
+        "curr_volume": 3049999.4,
+        "time": 1716749911
+    },
+    {
+        "pair": "WLDUSDT",
+        "prev_volume": 0,
+        "curr_volume": 35428.6,
+        "time": 1716749915
+    },
+    {
+        "pair": "ETCUSDT",
+        "prev_volume": 119372.9,
+        "curr_volume": 1403095.4000000001,
+        "time": 1716749917
+    },
+    {
+        "pair": "COMPUSDT",
+        "prev_volume": 36230.57,
+        "curr_volume": 250683.53999999998,
+        "time": 1716749917
+    },
+    {
+        "pair": "MANAUSDT",
+        "prev_volume": 122729.4,
+        "curr_volume": 1602445.3,
+        "time": 1716749920
+    },
+    {
+        "pair": "XLMUSDT",
+        "prev_volume": 13142203.0,
+        "curr_volume": 144509169.0,
+        "time": 1716749921
+    },
+    {
+        "pair": "CHZUSDT",
+        "prev_volume": 553204.0,
+        "curr_volume": 7260973.0,
+        "time": 1716749921
+    },
+    {
+        "pair": "MKRUSDT",
+        "prev_volume": 22.82,
+        "curr_volume": 268.9,
+        "time": 1716749921
+    },
+    {
+        "pair": "BCHUSDT",
+        "prev_volume": 11779.96,
+        "curr_volume": 109161.26000000001,
+        "time": 1716749922
+    },
+    {
+        "pair": "GRTUSDT",
+        "prev_volume": 311279.4,
+        "curr_volume": 4191267.4000000004,
+        "time": 1716749924
+    },
+    {
+        "pair": "QNTUSDT",
+        "prev_volume": 168.25,
+        "curr_volume": 2234.4500000000003,
+        "time": 1716749924
+    },
+    {
+        "pair": "KLAYUSDT",
+        "prev_volume": 192860.2,
+        "curr_volume": 1998853.8,
+        "time": 1716749925
+    },
+    {
+        "pair": "BATUSDT",
+        "prev_volume": 149660.2,
+        "curr_volume": 1750335.7,
+        "time": 1716749929
+    },
+    {
+        "pair": "OMGUSDT",
+        "prev_volume": 1234912.7,
+        "curr_volume": 12387240.799999997,
+        "time": 1716749929
+    },
+    {
+        "pair": "ICPUSDT",
+        "prev_volume": 225463.8,
+        "curr_volume": 3055856.0,
+        "time": 1716749930
+    },
+    {
+        "pair": "FILUSDT",
+        "prev_volume": 1101525.0,
+        "curr_volume": 8886237.7,
+        "time": 1716749931
+    },
+    {
+        "pair": "YFIUSDT",
+        "prev_volume": 6.2185,
+        "curr_volume": 45.73349999999999,
+        "time": 1716749934
+    },
+    {
+        "pair": "LEVERUSDT",
+        "prev_volume": 0,
+        "curr_volume": 14198700.0,
+        "time": 1716749935
+    },
+    {
+        "pair": "AAVEUSDT",
+        "prev_volume": 10421.05,
+        "curr_volume": 295665.48,
+        "time": 1716749936
+    },
+    {
+        "pair": "BTCUSDT",
+        "prev_volume": 17.641,
+        "curr_volume": 161.44100000000003,
+        "time": 1716749936
+    },
+    {
+        "pair": "SUSHIUSDT",
+        "prev_volume": 887132.7,
+        "curr_volume": 10832362.1,
+        "time": 1716749937
+    },
+    {
+        "pair": "ADAUSDT",
+        "prev_volume": 4051135.0,
+        "curr_volume": 91497952.0,
+        "time": 1716749939
+    },
+    {
+        "pair": "DOTUSDT",
+        "prev_volume": 510538.1,
+        "curr_volume": 7216739.0,
+        "time": 1716749940
+    },
+    {
+        "pair": "AGLDUSDT",
+        "prev_volume": 21062.3,
+        "curr_volume": 246866.40000000002,
+        "time": 1716749943
+    },
+    {
+        "pair": "MEMEUSDT",
+        "prev_volume": 0,
+        "curr_volume": 3744420.0,
+        "time": 1716749945
+    },
+    {
+        "pair": "WAVESUSDT",
+        "prev_volume": 0,
+        "curr_volume": 7371.9,
+        "time": 1716750056
+    },
+    {
+        "pair": "HOTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 4154200.0,
+        "time": 1716750056
+    },
+    {
+        "pair": "BTCUSDT",
+        "prev_volume": 0,
+        "curr_volume": 2.907,
+        "time": 1716750057
+    },
+    {
+        "pair": "ETHUSDT",
+        "prev_volume": 0,
+        "curr_volume": 1394.12,
+        "time": 1716750057
+    },
+    {
+        "pair": "XRPUSDT",
+        "prev_volume": 0,
+        "curr_volume": 5746640.0,
+        "time": 1716750057
+    },
+    {
+        "pair": "EOSUSDT",
+        "prev_volume": 0,
+        "curr_volume": 6578.6,
+        "time": 1716750057
+    },
+    {
+        "pair": "DOTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 98433.6,
+        "time": 1716750057
+    },
+    {
+        "pair": "XLMUSDT",
+        "prev_volume": 0,
+        "curr_volume": 3901246.0,
+        "time": 1716750057
+    },
+    {
+        "pair": "LTCUSDT",
+        "prev_volume": 0,
+        "curr_volume": 9745.7,
+        "time": 1716750057
+    },
+    {
+        "pair": "DOGEUSDT",
+        "prev_volume": 0,
+        "curr_volume": 228423930.0,
+        "time": 1716750057
+    },
+    {
+        "pair": "LEVERUSDT",
+        "prev_volume": 0,
+        "curr_volume": 20729600.0,
+        "time": 1716750057
+    },
+    {
+        "pair": "LOOKSUSDT",
+        "prev_volume": 0,
+        "curr_volume": 12088.6,
+        "time": 1716750057
+    },
+    {
+        "pair": "CHZUSDT",
+        "prev_volume": 0,
+        "curr_volume": 180664.0,
+        "time": 1716750057
+    },
+    {
+        "pair": "AXSUSDT",
+        "prev_volume": 0,
+        "curr_volume": 7901.9,
+        "time": 1716750058
+    },
+    {
+        "pair": "MANAUSDT",
+        "prev_volume": 0,
+        "curr_volume": 39072.5,
+        "time": 1716750058
+    },
+    {
+        "pair": "DYDXUSDT",
+        "prev_volume": 0,
+        "curr_volume": 24895.6,
+        "time": 1716750058
+    },
+    {
+        "pair": "MKRUSDT",
+        "prev_volume": 0,
+        "curr_volume": 18.915,
+        "time": 1716750058
+    },
+    {
+        "pair": "COMPUSDT",
+        "prev_volume": 0,
+        "curr_volume": 12648.88,
+        "time": 1716750058
+    },
+    {
+        "pair": "ICPUSDT",
+        "prev_volume": 0,
+        "curr_volume": 126285.9,
+        "time": 1716750058
+    },
+    {
+        "pair": "ADAUSDT",
+        "prev_volume": 0,
+        "curr_volume": 2625442.0,
+        "time": 1716750058
+    },
+    {
+        "pair": "ETCUSDT",
+        "prev_volume": 0,
+        "curr_volume": 33369.0,
+        "time": 1716750058
+    },
+    {
+        "pair": "KLAYUSDT",
+        "prev_volume": 0,
+        "curr_volume": 18377.7,
+        "time": 1716750058
+    },
+    {
+        "pair": "AAVEUSDT",
+        "prev_volume": 0,
+        "curr_volume": 3752.0,
+        "time": 1716750058
+    },
+    {
+        "pair": "YFIUSDT",
+        "prev_volume": 0,
+        "curr_volume": 0.9614,
+        "time": 1716750058
+    },
+    {
+        "pair": "XTZUSDT",
+        "prev_volume": 0,
+        "curr_volume": 266246.2,
+        "time": 1716750058
+    },
+    {
+        "pair": "LINKUSDT",
+        "prev_volume": 0,
+        "curr_volume": 113480.9,
+        "time": 1716750058
+    },
+    {
+        "pair": "SUSHIUSDT",
+        "prev_volume": 0,
+        "curr_volume": 678884.0,
+        "time": 1716750058
+    },
+    {
+        "pair": "UNIUSDT",
+        "prev_volume": 0,
+        "curr_volume": 4898.2,
+        "time": 1716750058
+    },
+    {
+        "pair": "KSMUSDT",
+        "prev_volume": 0,
+        "curr_volume": 163.78,
+        "time": 1716750058
+    },
+    {
+        "pair": "BCHUSDT",
+        "prev_volume": 0,
+        "curr_volume": 3566.93,
+        "time": 1716750058
+    },
+    {
+        "pair": "WLDUSDT",
+        "prev_volume": 0,
+        "curr_volume": 7477.7,
+        "time": 1716750058
+    },
+    {
+        "pair": "QNTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 89.84,
+        "time": 1716750058
+    },
+    {
+        "pair": "USDCUSDT",
+        "prev_volume": 0,
+        "curr_volume": 62291.8,
+        "time": 1716750058
+    },
+    {
+        "pair": "GRTUSDT",
+        "prev_volume": 0,
+        "curr_volume": 127275.2,
+        "time": 1716750058
+    },
+    {
+        "pair": "SOLUSDT",
+        "prev_volume": 0,
+        "curr_volume": 22215.3,
+        "time": 1716750058
+    },
+    {
+        "pair": "FILUSDT",
+        "prev_volume": 0,
+        "curr_volume": 1149206.8,
+        "time": 1716750058
+    },
+    {
+        "pair": "OMGUSDT",
+        "prev_volume": 0,
+        "curr_volume": 454099.4,
+        "time": 1716750058
+    },
+    {
+        "pair": "BATUSDT",
+        "prev_volume": 0,
+        "curr_volume": 36031.5,
+        "time": 1716750058
+    },
+    {
+        "pair": "ZRXUSDT",
+        "prev_volume": 0,
+        "curr_volume": 12627.0,
+        "time": 1716750058
+    },
+    {
+        "pair": "CRVUSDT",
+        "prev_volume": 0,
+        "curr_volume": 38149.0,
+        "time": 1716750058
+    },
+    {
+        "pair": "AGLDUSDT",
+        "prev_volume": 0,
+        "curr_volume": 7480.6,
+        "time": 1716750058
+    },
+    {
+        "pair": "ANKRUSDT",
+        "prev_volume": 0,
+        "curr_volume": 77637.0,
+        "time": 1716750058
+    },
+    {
+        "pair": "PERPUSDT",
+        "prev_volume": 0,
+        "curr_volume": 9200.0,
+        "time": 1716750058
+    },
+    {
+        "pair": "MATICUSDT",
+        "prev_volume": 0,
+        "curr_volume": 3442625.0,
+        "time": 1716750058
+    }
+]
