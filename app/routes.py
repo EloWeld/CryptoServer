@@ -51,10 +51,9 @@ def settings_page():
     settings = load_settings()
     return render_template('settings.html', settings=settings)
 
-@main.route('/webhook', methods=['POST'])
-def webhook():
+@main.route('/webhook/<int:hook_id>', methods=['POST'])
+def webhook(hook_id: int):
     data = request.json
-    hook_id = data.get('id')
     current_time = time.time()
     
     settings = load_settings()

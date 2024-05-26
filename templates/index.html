@@ -15,7 +15,7 @@
         <ul class="mt-4">
             {% for webhook in settings.webhooks %}
                 <li class="mb-2 p-2 border rounded">
-                    Webhook: <a href="{{ settings.domain }}/webhook_{{ webhook.webhook }}" class="text-blue-500">{{ settings.domain }}/webhook_{{ webhook.webhook }}</a> | Delay: {{ webhook.delay }} seconds
+                    Webhook: <a href="{{ settings.domain }}/webhook/{{ webhook.webhook }}/" class="text-blue-500">{{ settings.domain }}/webhook_{{ webhook.webhook }}</a> | Delay: {{ webhook.delay }} seconds
                 </li>
             {% endfor %}
         </ul>
