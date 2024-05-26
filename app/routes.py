@@ -11,7 +11,7 @@ SETTINGS_FILE = 'settings.json'
 def load_settings():
     if not os.path.exists(SETTINGS_FILE):
         with open(SETTINGS_FILE, 'w') as f:
-            json.dump({"finandy_url": "URL_ТВОЕГО_ТЕРМИНАЛА", "domain": "https://ВАШ_ДОМЕН", "webhooks": [], "received_hooks": [], "blocked_hooks": 0}, f)
+            json.dump({"domain": "https://ВАШ_ДОМЕН", "webhooks": [], "received_hooks": [], "blocked_hooks": 0}, f)
     with open(SETTINGS_FILE, 'r') as f:
         return json.load(f)
 
@@ -32,8 +32,9 @@ def add_webhook():
     if request.method == 'POST':
         webhook = request.form['webhook']
         delay = int(request.form['delay'])
+        redirect_to_url = request.form['redirect_to_url']
         settings = load_settings()
-        settings['webhooks'].append({"webhook": webhook, "delay": delay})
+        settings['webhooks'].append({"webhook": webhook, "delay": delay, "redirect_to_url": redirect_to_url})
         save_settings(settings)
         return redirect('/')
     return render_template('add_webhook.html')
@@ -41,23 +42,29 @@ def add_webhook():
 @main.route('/settings', methods=['GET', 'POST'])
 def settings_page():
     if request.method == 'POST':
-        finandy_url = request.form['finandy_url']
         domain = request.form['domain']
         settings = load_settings()
-        settings['finandy_url'] = finandy_url
         settings['domain'] = domain
         save_settings(settings)
         return redirect('/')
     settings = load_settings()
     return render_template('settings.html', settings=settings)
 
-@main.route('/webhook/<int:hook_id>', methods=['POST'])
-def webhook(hook_id: int):
+
+@main.route('/webhook/<hook_id>', methods=['POST', 'GET'])
+def webhook(hook_id: str):
+    if request.method == "GET":
+        return jsonify({"message": "Na-ah! Only POST"}), 400
+    if request.content_type != "application/json":
+        return jsonify({"message": "Na-ah! Need body, application/json"}), 400
+        
     data = request.json
     current_time = time.time()
     
+    
     settings = load_settings()
-    delay = next((w['delay'] for w in settings['webhooks'] if w['webhook'] == hook_id), 30)
+    hook = [w for w in settings['webhooks'] if w['webhook'] == hook_id][0]
+    delay = hook['delay']
 
     if hook_id in last_hook_time:
         time_since_last_hook = current_time - last_hook_time[hook_id]
@@ -69,14 +76,14 @@ def webhook(hook_id: int):
     last_hook_time[hook_id] = current_time
     settings['received_hooks'].append({"hook_id": hook_id, "time": current_time})
     save_settings(settings)
-    forward_hook(data, settings['finandy_url'])
+    forward_hook(data, hook['redirect_to_url'])
     
     return jsonify({"status": "forwarded"}), 200
 
-def forward_hook(data, finandy_url):
+def forward_hook(data, redirect_to):
     import requests
     headers = {'Content-Type': 'application/json'}
-    response = requests.post(finandy_url, json=data, headers=headers)
+    response = requests.post(redirect_to, json=data, headers=headers)
     return response
 
 def get_bybit_tickers():

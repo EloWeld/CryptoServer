@@ -15,13 +15,10 @@
         <ul class="mt-4">
             {% for webhook in settings.webhooks %}
                 <li class="mb-2 p-2 border rounded">
-                    Webhook: <a href="{{ settings.domain }}/webhook/{{ webhook.webhook }}/" class="text-blue-500">{{ settings.domain }}/webhook/{{ webhook.webhook }}/</a> | Delay: {{ webhook.delay }} seconds
+                    Webhook: <a href="{{ settings.domain }}/webhook/{{ webhook.webhook }}" class="text-blue-500">{{ settings.domain }}/webhook/{{ webhook.webhook }}</a> | Delay: {{ webhook.delay }} seconds | Redirect to: {{ webhook.redirect_to_url }}
                 </li>
             {% endfor %}
         </ul>
-        <div class="mt-4 p-2 border rounded">
-            Finandy URL: {{ settings.finandy_url }}
-        </div>
         <div class="mt-4 p-2 border rounded">
             <h2 class="text-xl font-bold">Received Webhooks</h2>
             <ul>
