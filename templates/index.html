@@ -1,36 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <title>Webhook Settings</title>
 </head>
+
 <body>
     <div class="container mx-auto p-4">
         <h1 class="text-2xl font-bold mb-4">Webhook Settings</h1>
         <a href="/add" class="bg-blue-500 text-white px-4 py-2 rounded">Add Webhook</a>
         <a href="/settings" class="bg-green-500 text-white px-4 py-2 rounded ml-4">Settings</a>
-        <a href="/pairs" class="bg-yellow-500 text-white px-4 py-2 rounded ml-4">Pairs</a>
+        <!-- <a href="/pairs" class="bg-yellow-500 text-white px-4 py-2 rounded ml-4">Pairs</a> -->
         <ul class="mt-4">
             {% for webhook in settings.webhooks %}
-                <li class="mb-2 p-2 border rounded">
-                    Webhook: <a href="{{ settings.domain }}/webhook/{{ webhook.webhook }}" class="text-blue-500">{{ settings.domain }}/webhook/{{ webhook.webhook }}</a> | Delay: {{ webhook.delay }} seconds | Redirect to: {{ webhook.redirect_to_url }}
-                </li>
+            <li class="mb-2 p-2 border rounded flex justify-between items-center">
+                <p>Webhook: <a href="{{ settings.domain }}/webhook/{{ webhook.webhook }}" class="text-blue-500">{{
+                        settings.domain }}/webhook/{{ webhook.webhook }}</a> | Delay: {{ webhook.delay }} seconds |
+                    Redirect to: {{ webhook.redirect_to_url }}</p>
+                <a href='/del/{{webhook.webhook}}' class="bg-red-500 text-white px-4 py-2 rounded ml-4">Delete</a>
+            </li>
             {% endfor %}
         </ul>
         <div class="mt-4 p-2 border rounded">
             <h2 class="text-xl font-bold">Received Webhooks</h2>
             <ul>
                 {% for hook in settings.received_hooks %}
-                    <li>Webhook ID: {{ hook.hook_id }} | Time: {{ hook.time }}</li>
+                <li>Webhook ID: {{ hook.hook_id }} | Time: {{ hook.time }}</li>
                 {% endfor %}
             </ul>
         </div>
+
         <div class="mt-4 p-2 border rounded">
             <h2 class="text-xl font-bold">Blocked Hooks</h2>
             <p>Total Blocked Hooks: {{ settings.blocked_hooks }}</p>
         </div>
+        <div class="flex flex-col md:flex-row gap-3 justify-between">
+            <div class="mt-4 p-2 border rounded w-full">
+                <h2 class="text-xl font-bold border-b">Last <span class="text-green-600">PUMP</span>s</h2>
+                <table class="min-w-full bg-white">
+                    <thead>
+                        <tr>
+                            <th class="py-2 text-start">Exchange</th>
+                            <th class="py-2">Coin</th>
+                            <th class="py-2 text-start">Change</th>
+                            <th class="py-2 text-start">Interval</th>
+                            <th class="py-2 text-start">Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pumps" class="text-center">
+                        <!-- Pump items will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 p-2 border rounded w-full">
+                <h2 class="text-xl font-bold border-b">Last <span class="text-red-600">DUMP</span>s</h2>
+                <table class="min-w-full bg-white">
+                    <thead>
+                        <tr>
+                            <th class="py-2">Exchange</th>
+                            <th class="py-2">Coin</th>
+                            <th class="py-2">Change</th>
+                            <th class="py-2">Interval</th>
+                            <th class="py-2">Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dumps" class="text-center">
+                        <!-- Dump items will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let lastPumps = [];
+            let lastDumps = [];
+
+            async function fetchChanges() {
+                const response = await fetch('/changes_log');
+                const data = await response.json();
+
+                const newPumps = data.filter(item => item.type === 'pump');
+                const newDumps = data.filter(item => item.type === 'dump');
+
+                updateList('pumps', newPumps, lastPumps);
+                updateList('dumps', newDumps, lastDumps);
+
+                lastPumps = newPumps;
+                lastDumps = newDumps;
+            }
+
+            function updateList(type, newData, oldData) {
+                const container = document.getElementById(type);
+                container.innerHTML = '';
+
+                newData.forEach(item => {
+                    const row = document.createElement('tr');
+                    let linkHref = `https://www.coinglass.com/tv/Binance_${item.symbol}`;
+                    if (item.exchange == "bybit") {
+                        linkHref = `https://www.coinglass.com/tv/Bybit_${item.symbol}`;
+                    }
+                    row.innerHTML = `
+            <td class="py-2">${item.exchange}</td>
+            <td class="py-2"><a class="text-blue-500" href="${linkHref}">${item.symbol}</a></td>
+            <td class="py-2">${item.change_amount}</td>
+            <td class="py-2">${item.interval} min</td>
+            <td class="py-2">${item.created_at.split(' ')[1]}</td>
+        `;
+                    container.appendChild(row);
+                });
+
+                if (JSON.stringify(newData) !== JSON.stringify(oldData) && oldData.length !== 0) {
+                    playSound();
+                    showNotification(type);
+                }
+            }
+
+            function playSound() {
+                const audio = new Audio('notification_sound.mp3');
+                audio.play();
+            }
+
+            function showNotification(type) {
+                const notification = document.createElement('div');
+                notification.className = 'fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded';
+                notification.textContent = `New ${type.toUpperCase()} detected!`;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+
+            fetchChanges();
+            setInterval(fetchChanges, 5000);
+        });
+    </script>
 </body>
+
 </html>

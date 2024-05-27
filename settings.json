@@ -1,13 +1,9 @@
 {
     "webhooks": [
         {
-            "webhook": "123123",
-            "delay": 22
-        },
-        {
-            "webhook": "123",
-            "delay": 231,
-            "redirect_to_url": "https://google.com"
+            "webhook": "asdads",
+            "delay": 20,
+            "redirect_to_url": "kmlmlk"
         }
     ],
     "received_hooks": [
@@ -17,5 +13,12 @@
         }
     ],
     "blocked_hooks": 0,
-    "domain": "http://127.0.0.1:5000"
+    "domain": "http://127.0.0.1:5000",
+    "pump_webhook": "https://finandyurl",
+    "dump_webhook": "https://finandyurl",
+    "pump_data": "",
+    "dump_data": "",
+    "check_per_minutes": 2,
+    "max_save_minutes": 15,
+    "min_change_percent": 1
 }
