@@ -83,9 +83,18 @@
                 const response = await fetch('/changes_log');
                 const data = await response.json();
 
-                const newPumps = data.filter(item => item.type === 'pump');
-                const newDumps = data.filter(item => item.type === 'dump');
+                let newPumps = data.filter(item => item.type === 'pump');
+                let newDumps = data.filter(item => item.type === 'dump');
 
+                newPumps.sort((a, b) => {
+                    return new Date(b.created_at) - new Date(a.created_at);
+                });
+                newDumps.sort((a, b) => {
+                    return new Date(b.created_at) - new Date(a.created_at);
+                });
+                
+
+                
                 updateList('pumps', newPumps, lastPumps);
                 updateList('dumps', newDumps, lastDumps);
 

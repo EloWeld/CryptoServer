@@ -32,8 +32,13 @@ def load_log():
         return []
 
     with open(CHANGES_LOG_FILE, 'r') as f:
+        logs = []
         lines = f.readlines()
-        logs = [json.loads(line) for line in lines]
+        for line in lines:
+            try:
+                logs.append(json.loads(line))
+            except Exception as e:
+                print(e)
     return logs
 
 @main.route('/changes_log', methods=['GET'])
