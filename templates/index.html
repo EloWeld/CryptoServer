@@ -14,12 +14,22 @@
         <a href="/add" class="bg-blue-500 text-white px-4 py-2 rounded">Add Webhook</a>
         <a href="/settings" class="bg-green-500 text-white px-4 py-2 rounded ml-4">Settings</a>
         <!-- <a href="/pairs" class="bg-yellow-500 text-white px-4 py-2 rounded ml-4">Pairs</a> -->
+        
+        <!-- Selector for Timezone -->
+        <div class="mt-4 p-2 border rounded">
+            <label for="timezone" class="block text-lg font-bold mb-2">Select Timezone:</label>
+            <select id="timezone" class="block w-full p-2 border rounded">
+                <option selected value="7">UTC+5</option>
+                <option value="0">UTC</option>
+                <option value="5">UTC+3</option>
+                <!-- Add other timezones as needed -->
+            </select>
+        </div>
+
         <ul class="mt-4">
             {% for webhook in settings.webhooks %}
             <li class="mb-2 p-2 border rounded flex justify-between items-center">
-                <p>Webhook: <a href="{{ settings.domain }}/webhook/{{ webhook.webhook }}" class="text-blue-500">{{
-                        settings.domain }}/webhook/{{ webhook.webhook }}</a> | Delay: {{ webhook.delay }} seconds |
-                    Redirect to: {{ webhook.redirect_to_url }}</p>
+                <p>Webhook: <a href="{{ settings.domain }}/webhook/{{ webhook.webhook }}" class="text-blue-500">{{ settings.domain }}/webhook/{{ webhook.webhook }}</a> | Delay: {{ webhook.delay }} seconds | Redirect to: {{ webhook.redirect_to_url }}</p>
                 <a href='/del/{{webhook.webhook}}' class="bg-red-500 text-white px-4 py-2 rounded ml-4">Delete</a>
             </li>
             {% endfor %}
@@ -78,6 +88,13 @@
         document.addEventListener('DOMContentLoaded', function () {
             let lastPumps = [];
             let lastDumps = [];
+            let timezoneOffset = 5;  // Default timezone offset
+
+            // Update timezone offset on change
+            document.getElementById('timezone').addEventListener('change', function () {
+                timezoneOffset = parseInt(this.value, 10);
+                fetchChanges();
+            });
 
             async function fetchChanges() {
                 const response = await fetch('/changes_log');
@@ -92,8 +109,6 @@
                 newDumps.sort((a, b) => {
                     return new Date(b.created_at) - new Date(a.created_at);
                 });
-                
-
                 
                 updateList('pumps', newPumps, lastPumps);
                 updateList('dumps', newDumps, lastDumps);
@@ -112,13 +127,15 @@
                     if (item.exchange == "bybit") {
                         linkHref = `https://www.coinglass.com/tv/Bybit_${item.symbol}`;
                     }
+                    const createdAt = new Date(item.created_at);
+                    const formattedDate = formatDate(createdAt, timezoneOffset);
                     row.innerHTML = `
-            <td class="py-2">${item.exchange}</td>
-            <td class="py-2"><a class="text-blue-500" href="${linkHref}">${item.symbol}</a></td>
-            <td class="py-2">${item.change_amount}</td>
-            <td class="py-2">${item.interval} min</td>
-            <td class="py-2">${item.created_at.split(' ')[1]}</td>
-        `;
+                        <td class="py-2">${item.exchange}</td>
+                        <td class="py-2"><a class="text-blue-500" href="${linkHref}">${item.symbol}</a></td>
+                        <td class="py-2">${item.change_amount}</td>
+                        <td class="py-2">${item.interval} min</td>
+                        <td class="py-2">${formattedDate}</td>
+                    `;
                     container.appendChild(row);
                 });
 
@@ -126,6 +143,12 @@
                     playSound();
                     showNotification(type);
                 }
+            }
+
+            function formatDate(date, offset) {
+                const utcDate = date.getTime() + (date.getTimezoneOffset() * 6000);
+                const newDate = new Date(utcDate + (3600000 * offset));
+                return newDate.toISOString().slice(0, 19).replace('T', ' ');
             }
 
             function playSound() {
