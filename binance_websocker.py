@@ -41,6 +41,8 @@ def add_journal(data):
     # Проверка на дублирование
     now = datetime.now()
     for line in lines:
+        if 'created_at' not in log_entry:
+            continue
         log_entry = json.loads(line)
         log_time = datetime.strptime(log_entry["created_at"], "%Y-%m-%d %H:%M:%S")
         if log_entry["symbol"] == data["symbol"] and log_entry["type"] == data["type"] and now - log_time < timedelta(minutes=settings['check_per_minutes']):
