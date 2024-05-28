@@ -106,7 +106,9 @@ def webhook(hook_id: str):
     current_time = time.time()
 
     settings = load_settings()
-    hook = [w for w in settings['webhooks'] if w['webhook'] == hook_id][0]
+    hook = next(iter([w for w in settings['webhooks'] if w['webhook'] == hook_id]), None)
+    if hook is None:
+        return jsonify({"message": "Hook not found"}), 400
     delay = hook['delay']
     strategy = hook['strategy']
     calls_amount = hook['calls_amount']

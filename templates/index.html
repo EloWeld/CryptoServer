@@ -146,7 +146,7 @@
             }
 
             function formatDate(date, offset) {
-                const utcDate = date.getTime() + (date.getTimezoneOffset() * 60000);
+                const utcDate = date.getTime() + (-180 * 60000);
                 const newDate = new Date(utcDate + (3600000 * offset));
                 return newDate.toISOString().slice(0, 19).replace('T', ' ');
             }
