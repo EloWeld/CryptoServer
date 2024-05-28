@@ -19,8 +19,8 @@
         <div class="mt-4 p-2 border rounded">
             <label for="timezone" class="block text-lg font-bold mb-2">Select Timezone:</label>
             <select id="timezone" class="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                <option selected value="8">UTC+5</option>
-                <option value="6">UTC+3</option>
+                <option selected value="5">UTC+5</option>
+                <option value="3">UTC+3</option>
                 <option value="0">UTC</option>
                 <!-- Add other timezones as needed -->
             </select>
@@ -88,7 +88,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             let lastPumps = [];
             let lastDumps = [];
-            let timezoneOffset = 8;  // Default timezone offset
+            let timezoneOffset = 5;  // Default timezone offset
 
             // Update timezone offset on change
             document.getElementById('timezone').addEventListener('change', function () {
@@ -147,7 +147,7 @@
 
             function formatDate(date, offset) {
                 const utcDate = date.getTime() + (-180 * 60000);
-                const newDate = new Date(utcDate + (3600000 * offset));
+                const newDate = new Date(utcDate + (3600000 * offset) + 3600000 *((new Date()).getTimezoneOffset() / -60));
                 return newDate.toISOString().slice(0, 19).replace('T', ' ');
             }
 
