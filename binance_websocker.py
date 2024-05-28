@@ -54,6 +54,8 @@ def add_journal(data):
 
     # Добавление новой записи
     lines.append(json.dumps(data, ensure_ascii=False, default=str) + "\n")
+    
+    send_webhook(settings, data['symbol'], data)
 
     # Оставляем только последние 2000 строк
     if len(lines) > max_lines:
@@ -127,7 +129,6 @@ def on_message(ws, message):
                 s_data = {"exchange": "binance", "symbol": symbol, "type": "pump", "mode": "price", "change_amount": f"{change_amount_pump:.2f}%", "interval": N, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 try:
                     add_journal(s_data)
-                    send_webhook(settings, symbol, s_data)
                 except Exception as e:
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
@@ -136,7 +137,6 @@ def on_message(ws, message):
                 s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount_dump:.2f}%", "interval": N, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 try:
                     add_journal(s_data)
-                    send_webhook(settings, symbol, s_data)
                 except Exception as e:
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
