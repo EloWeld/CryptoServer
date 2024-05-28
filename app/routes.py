@@ -127,6 +127,9 @@ def webhook(hook_id: str):
 
         # Remove old calls outside of the delay window
         hook_calls = [t for t in hook_calls if current_time - t <= delay]
+        for h in settings['webhooks']:
+            if h['webhook'] == hook['webhook']:
+                h['hook_calls'] = hook_calls
         save_settings(settings)
 
         if len(hook_calls) < int(calls_amount):
@@ -134,6 +137,11 @@ def webhook(hook_id: str):
 
         # Reset count after threshold is reached
         hook_calls = []
+        
+        for h in settings['webhooks']:
+            if h['webhook'] == hook['webhook']:
+                h['hook_calls'] = hook_calls
+        save_settings(settings)
 
     last_hook_time[hook_id] = current_time
     settings['received_hooks'].append(
