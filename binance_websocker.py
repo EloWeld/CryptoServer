@@ -126,7 +126,7 @@ def on_message(ws, message):
             # print(old_price, current_price, change_amount)
             if change_amount_pump >= M:
                 loguru.logger.info(f"{symbol} price PUMPED by {change_amount_pump:.2f}% over the last {N} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                s_data = {"exchange": "binance", "symbol": symbol, "type": "pump", "mode": "price", "change_amount": f"{change_amount_pump:.2f}%", "interval": N, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                s_data = {"exchange": "binance", "symbol": symbol, "type": "pump", "mode": "price", "change_amount": f"{change_amount_pump:.2f}%", "interval": N, "old_price": min_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 try:
                     add_journal(s_data)
                 except Exception as e:
@@ -134,7 +134,7 @@ def on_message(ws, message):
 
             if change_amount_dump >= M:
                 loguru.logger.info(f"{symbol} price DUMPED by {change_amount_dump:.2f}% over the last {N} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount_dump:.2f}%", "interval": N, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount_dump:.2f}%", "interval": N, "old_price": max_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 try:
                     add_journal(s_data)
                 except Exception as e:
