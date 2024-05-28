@@ -88,7 +88,7 @@ def settings_page():
         settings['dump_data'] = request.form['dump_data']
         settings['check_per_minutes'] = int(request.form['check_per_minutes'])
         settings['max_save_minutes'] = int(request.form['max_save_minutes'])
-        settings['min_change_percent'] = int(request.form['min_change_percent'])
+        settings['min_change_percent'] = float(request.form['min_change_percent'].replace(',','.'))
         save_settings(settings)
         return redirect('/')
     settings = load_settings()
@@ -126,7 +126,7 @@ def webhook(hook_id: str):
         # Remove old calls outside of the delay window
         hook_calls = [t for t in hook_calls if current_time - t <= delay]
 
-        if len(hook_calls) < calls_amount:
+        if len(hook_calls) < int(calls_amount):
             return jsonify({"status": "waiting", "reason": f"Received {len(hook_calls)}/{calls_amount} calls"}), 200
 
         # Reset count after threshold is reached
