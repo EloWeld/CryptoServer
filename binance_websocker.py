@@ -31,7 +31,7 @@ def send_webhook(setts, symbol, data):
 
 def reload_settings():
     global settings
-    with open('settings.json', 'r', encoding='utf-8') as f:
+    with open('settings_new.json', 'r', encoding='utf-8') as f:
         settings = json.load(f)
 
 def add_journal(data):

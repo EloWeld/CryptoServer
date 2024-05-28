@@ -6,7 +6,7 @@ import ccxt
 
 main = Blueprint('main', __name__)
 
-SETTINGS_FILE = 'settings.json'
+SETTINGS_FILE = 'settings_new.json'
 CHANGES_LOG_FILE = "changes_log.txt"
 
 
