@@ -127,6 +127,7 @@ def webhook(hook_id: str):
 
         # Remove old calls outside of the delay window
         hook_calls = [t for t in hook_calls if current_time - t <= delay]
+        save_settings(settings)
 
         if len(hook_calls) < int(calls_amount):
             return jsonify({"status": "waiting", "reason": f"Received {len(hook_calls)}/{calls_amount} calls"}), 200
