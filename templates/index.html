@@ -38,7 +38,7 @@
             <h2 class="text-xl font-bold">Received Webhooks</h2>
             <ul>
                 {% for hook in settings.received_hooks %}
-                <li>Webhook ID: {{ hook.hook_id }} | Time: {{ hook.time }}</li>
+                <li>Webhook ID: {{ hook.hook_id }} | Time: <span class="hook-time" data-time="{{ hook.time }}"></span></li>
                 {% endfor %}
             </ul>
         </div>
@@ -89,10 +89,22 @@
             let lastPumps = [];
             let lastDumps = [];
             let timezoneOffset = 5;  // Default timezone offset
+            const hookTimes = document.querySelectorAll('.hook-time');
+            console.log(hookTimes);
+
+            function updateHookTimes() {
+                hookTimes.forEach(span => {
+                    console.log(parseFloat(span.dataset.time));
+                    const utcTime = new Date(parseFloat(span.dataset.time));
+                    span.textContent = formatDate(utcTime, timezoneOffset);
+                });
+            }
+            updateHookTimes();
 
             // Update timezone offset on change
             document.getElementById('timezone').addEventListener('change', function () {
                 timezoneOffset = parseInt(this.value, 10);
+                updateHookTimes()
                 fetchChanges();
             });
 
@@ -148,7 +160,7 @@
             function formatDate(date, offset) {
                 const utcDate = date.getTime() + (-180 * 60000);
                 const newDate = new Date(utcDate + (3600000 * offset) + 3600000 *((new Date()).getTimezoneOffset() / -60));
-                return newDate.toISOString().slice(0, 19).replace('T', ' ');
+                return newDate.toISOString().slice(5, 19).replace('T', ' ');
             }
 
             function playSound() {

@@ -16,9 +16,11 @@
     "domain": "http://127.0.0.1:5000",
     "pump_webhook": "https://finandyurl",
     "dump_webhook": "https://finandyurl",
-    "pump_data": "{\r\n  \"name\": \"\u041b\u043e\u043d\u0433\",\r\n  \"secret\": \"67f75tsb0hw\",\r\n  \"side\": \"buy\",\r\n  \"symbol\": \"{{ticker}}\"\r\n}",
-    "dump_data": "{\r\n  \"name\": \"\u041b\u043e\u043d\u0433\",\r\n  \"secret\": \"67f75tsb0hw\",\r\n  \"side\": \"buy\",\r\n  \"symbol\": \"{{ticker}}\"\r\n}",
-    "check_per_minutes": 2,
+    "pump_data": "{}",
+    "dump_data": "{}",
+    "check_per_minutes": 1,
     "max_save_minutes": 15,
-    "min_change_percent": 1.2
+    "min_change_percent": 0.2,
+    "use_spot": false,
+    "use_wicks": true
 }

@@ -7,11 +7,15 @@ import time
 from datetime import datetime, timedelta
 import requests
 import loguru
+import ccxt
+binance = ccxt.binance()
 # Параметры для вывода сообщений в консоль
 settings = {}
 
 # Глобальный словарь для хранения истории цен
 price_history = {}
+spot_pairs = []
+futures_pairs = []
 lock = threading.Lock()
 
 def send_webhook(setts, symbol, data):
@@ -42,7 +46,7 @@ def add_journal(data):
     now = datetime.now()
     for line in lines:
         log_entry = json.loads(line)
-        if 'created_at' not in log_entry:
+        if 'created_at' not in log_entry or 'symbol' not in log_entry:
             continue
         log_time = datetime.strptime(log_entry["created_at"], "%Y-%m-%d %H:%M:%S")
         if log_entry["symbol"] == data["symbol"] and log_entry["type"] == data["type"] and now - log_time < timedelta(minutes=settings['check_per_minutes']):
@@ -62,6 +66,8 @@ def add_journal(data):
 def on_message(ws, message):
     global price_history
     global settings
+    global spot_pairs
+    global futures_pairs
 
     data = json.loads(message)
     if 's' not in data:
@@ -69,45 +75,65 @@ def on_message(ws, message):
         return
     symbol = data['s']
     price = data['c']
-    timestamp = data['E'] // 1000 // 60
+    curr_minute = data['E'] // 1000 // 60
     # print(timestamp)
     # print(symbol,"-",price, timestamp)
     with lock:
         if symbol not in price_history:
+            # If no prices yet
             price_history[symbol] = []
-            price_history[symbol].append((timestamp, price))
+            price_history[symbol].append((curr_minute, price))
         else:
-            if price_history[symbol][-1][0] == timestamp:
-                return
+            if price_history[symbol][-1][0] == curr_minute:
+                # If we in current minute candle
+                pass
             else:
-                price_history[symbol].append((timestamp, price))
-        price_history[symbol][-1] = (timestamp, price)
+                # If new candle started add open_time+open_price
+                price_history[symbol].append((curr_minute, price))
+        
+        price_history[symbol][-1] = (curr_minute, price)
+        
+        USE_SPOT = settings.get('use_spot', False)
         MAX_MINUTES = settings['max_save_minutes']
+        N = settings['check_per_minutes']
+        M = settings['min_change_percent']
+        
+        if not USE_SPOT:
+            if symbol not in futures_pairs:
+                return
+        
         # Сохраняем только последние 20 минут
         if len(price_history[symbol]) > MAX_MINUTES:
             price_history[symbol].pop(0)
 
-        N = settings['check_per_minutes']
-        M = settings['min_change_percent']
         # print(N, M, MAX_MINUTES)
 
         if len(price_history[symbol]) > N:
             old_price = price_history[symbol][-(N+1)][1]
+            
+            
+            if settings['use_wicks']:
+                min_price = min([x[1] for x in price_history[symbol][-(N+1):-1]])
+                max_price = max([x[1] for x in price_history[symbol][-(N+1):-1]])
+            else:
+                min_price = old_price
+                max_price = old_price
             current_price = price_history[symbol][-1][1]
-            change_amount = (float(current_price) - float(old_price)) / float(old_price) * 100
+            change_amount_pump = (float(current_price) - float(min_price)) / float(min_price) * 100
+            change_amount_dump = (float(max_price) - float(current_price)) / float(max_price) * 100
             # print(old_price, current_price, change_amount)
-            if change_amount >= M:
-                loguru.logger.info(f"{symbol} price PUMPED by {change_amount:.2f}% over the last {N} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                s_data = {"exchange": "binance", "symbol": symbol, "type": "pump", "mode": "price", "change_amount": f"{change_amount:.2f}%", "interval": N, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            if change_amount_pump >= M:
+                loguru.logger.info(f"{symbol} price PUMPED by {change_amount_pump:.2f}% over the last {N} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                s_data = {"exchange": "binance", "symbol": symbol, "type": "pump", "mode": "price", "change_amount": f"{change_amount_pump:.2f}%", "interval": N, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 try:
                     add_journal(s_data)
                     send_webhook(settings, symbol, s_data)
                 except Exception as e:
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
-            if change_amount * -1 >= M:
-                loguru.logger.info(f"{symbol} price DUMPED by {change_amount:.2f}% over the last {N} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount:.2f}%", "interval": N, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            if change_amount_dump >= M:
+                loguru.logger.info(f"{symbol} price DUMPED by {change_amount_dump:.2f}% over the last {N} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount_dump:.2f}%", "interval": N, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 try:
                     add_journal(s_data)
                     send_webhook(settings, symbol, s_data)
@@ -157,10 +183,21 @@ def start_websocket(pairs):
     ws.run_forever()
 
 def get_usdt_pairs():
-    url = 'https://api.binance.com/api/v3/ticker/price'
-    response = requests.get(url).json()
-    usdt_pairs = [item['symbol'] for item in response if item['symbol'].endswith('USDT')]
-    return usdt_pairs
+    global spot_pairs
+    global futures_pairs
+    # Получите все символы для futures
+    markets = binance.fapiPublicGetExchangeInfo()
+    symbols = [market['symbol'] for market in markets['symbols']]
+    futures_pairs = [item for item in symbols if item.endswith('USDT')]
+    loguru.logger.info("Wait 3 seconds for spots info")
+    time.sleep(3)
+    # Получите все символы для spot
+    markets = binance.publicGetExchangeInfo()
+    symbols = [market['symbol'] for market in markets['symbols']]
+    spot_pairs = [item for item in symbols if item.endswith('USDT')]
+    
+    loguru.logger.success(f"Found binance FUTURES pairs: {len(futures_pairs)}, SPOT pairs: {len(spot_pairs)}")
+    return spot_pairs
 
 if __name__ == "__main__":
     usdt_pairs = get_usdt_pairs()

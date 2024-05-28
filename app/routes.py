@@ -89,6 +89,8 @@ def settings_page():
         settings['check_per_minutes'] = int(request.form['check_per_minutes'])
         settings['max_save_minutes'] = int(request.form['max_save_minutes'])
         settings['min_change_percent'] = float(request.form['min_change_percent'].replace(',','.'))
+        settings['use_spot'] = 'use_spot' in request.form
+        settings['use_wicks'] = 'use_wicks' in request.form
         save_settings(settings)
         return redirect('/')
     settings = load_settings()
