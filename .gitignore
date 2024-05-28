@@ -161,3 +161,4 @@ cython_debug/
 changes_log.txt
 binance_prices.csv
 binance_klines.csv
+settings.json
