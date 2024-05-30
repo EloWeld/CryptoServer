@@ -9,6 +9,11 @@ import requests
 import loguru
 import ccxt
 binance = ccxt.binance()
+
+SETTINGS_FILE = 'settings_new.json'
+CHANGES_LOG_FILE = 'changes_log.txt'
+PRICE_SAVE_FILE = 'binance_prices.csv'
+
 # Параметры для вывода сообщений в консоль
 settings = {}
 
@@ -18,24 +23,29 @@ spot_pairs = []
 futures_pairs = []
 lock = threading.Lock()
 
-def send_webhook(setts, symbol, data):
+
+def send_webhook(setts, symbol, data, minute):
     url = setts['pump_webhook' if data['type'] == 'pump' else 'dump_webhook']
-    data_template = setts['pump_data' if data['type'] == 'pump' else 'dump_data']
+    data_template = setts['pump_data' if data['type']
+                          == 'pump' else 'dump_data']
     data = data_template.replace('{{ticker}}', symbol)
     try:
-        r = requests.post(url, headers={'Content-Type': "application/json"}, data=data)
+        r = requests.post(
+            url, headers={'Content-Type': "application/json"}, data=data)
         if r.status_code != 200:
-            add_journal({"type": "error", "message": r.text})
+            add_journal({"type": "error", "message": r.text, "symbol": symbol, "created_at": minute})
     except Exception as e:
-        add_journal({"type": "error", "message": str(e)})
+        add_journal({"type": "error", "message": str(e), "symbol": symbol, "created_at": minute})
+
 
 def reload_settings():
     global settings
-    with open('settings_new.json', 'r', encoding='utf-8') as f:
+    with open(SETTINGS_FILE, 'r', encoding='utf-8') as f:
         settings = json.load(f)
 
+
 def add_journal(data):
-    log_file = "changes_log.txt"
+    log_file = CHANGES_LOG_FILE
     max_lines = 2000
 
     # Чтение существующего журнала
@@ -43,10 +53,13 @@ def add_journal(data):
         lines = f.readlines()
 
     # Проверка на дублирование
-    now = int(datetime.now().timestamp()) // 60
+    now = (int(datetime.now().timestamp()) // 60) * 60
     for line in lines:
-        log_entry = json.loads(line)
-        if 'created_at' not in log_entry or 'symbol' not in log_entry:
+        try:
+            log_entry = json.loads(line)
+        except Exception as e:
+            continue
+        if ('created_at' not in log_entry) or ('symbol' not in log_entry):
             continue
         log_time = datetime.strptime(log_entry["created_at"], "%Y-%m-%d %H:%M:%S")
         if log_entry["symbol"] == data["symbol"] and log_entry["type"] == data["type"] and now - log_time < timedelta(minutes=settings['check_per_minutes']):
@@ -54,8 +67,8 @@ def add_journal(data):
 
     # Добавление новой записи
     lines.append(json.dumps(data, ensure_ascii=False, default=str) + "\n")
-    
-    send_webhook(settings, data['symbol'], data)
+    if data['type'] != "error":
+        send_webhook(settings, data['symbol'], data, now)
 
     # Оставляем только последние 2000 строк
     if len(lines) > max_lines:
@@ -65,19 +78,16 @@ def add_journal(data):
     with open(log_file, 'w', encoding='utf-8') as f:
         f.writelines(lines)
 
-def on_message(ws, message):
+
+def update_price(message):
     global price_history
     global settings
     global spot_pairs
     global futures_pairs
 
-    data = json.loads(message)
-    if 's' not in data:
-        loguru.logger.info("D_message")
-        return
-    symbol = data['s']
-    price = data['c']
-    curr_minute = data['E'] // 1000 // 60
+    symbol = message['symbol']
+    price = message['price']
+    curr_minute = (int(datetime.now().timestamp()) // 60) * 60
     # print(timestamp)
     # print(symbol,"-",price, timestamp)
     with lock:
@@ -92,18 +102,14 @@ def on_message(ws, message):
             else:
                 # If new candle started add open_time+open_price
                 price_history[symbol].append((curr_minute, price))
-        
+
         price_history[symbol][-1] = (curr_minute, price)
+
         
-        USE_SPOT = settings.get('use_spot', False)
         MAX_MINUTES = settings['max_save_minutes']
         N = settings['check_per_minutes']
         M = settings['min_change_percent']
-        
-        if USE_SPOT == False:
-            if symbol not in futures_pairs:
-                return
-        
+
         # Сохраняем только последние 20 минут
         if len(price_history[symbol]) > MAX_MINUTES:
             price_history[symbol].pop(0)
@@ -112,54 +118,51 @@ def on_message(ws, message):
 
         if len(price_history[symbol]) > N:
             old_price = price_history[symbol][-(N+1)][1]
-            
-            
+
             if settings['use_wicks']:
                 min_price = min([x[1] for x in price_history[symbol][-(N+1):-1]])
                 max_price = max([x[1] for x in price_history[symbol][-(N+1):-1]])
             else:
                 min_price = old_price
                 max_price = old_price
+            
             current_price = price_history[symbol][-1][1]
             change_amount_pump = (float(current_price) - float(min_price)) / float(min_price) * 100
             change_amount_dump = (float(max_price) - float(current_price)) / float(max_price) * 100
+            # print(change_amount_pump, change_amount_dump, M)
             # print(old_price, current_price, change_amount)
-            if change_amount_pump >= M:
+            min_oi_candls = settings['min_open_interest_same_dir_candles']
+            oi_candles_pump = True
+            oi_candles_dump = True
+            if min_oi_candls > 0:
+                oi_candles = get_oi_candles(symbol, min_oi_candls)
+                oi_candles_pump = all([oi_candles[i] > oi_candles[i] for i in range(len(oi_candles) - 1)])
+                oi_candles_dump = all([oi_candles[i] < oi_candles[i] for i in range(len(oi_candles) - 1)])
+                
+            if change_amount_pump >= M and oi_candles_pump and settings['enable_pump']:
                 loguru.logger.info(f"{symbol} price PUMPED by {change_amount_pump:.2f}% over the last {N} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                s_data = {"exchange": "binance", "symbol": symbol, "type": "pump", "mode": "price", "change_amount": f"{change_amount_pump:.2f}%", "interval": N, "old_price": min_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                s_data = {"exchange": "binance", "symbol": symbol, "type": "pump", "mode": "price", "change_amount": f"{change_amount_pump:.2f}%",
+                          "interval": N, "old_price": min_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 try:
                     add_journal(s_data)
                 except Exception as e:
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
-            if change_amount_dump >= M:
+            if change_amount_dump >= M and oi_candles_dump and settings['enable_pump']:
                 loguru.logger.info(f"{symbol} price DUMPED by {change_amount_dump:.2f}% over the last {N} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount_dump:.2f}%", "interval": N, "old_price": max_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount_dump:.2f}%",
+                          "interval": N, "old_price": max_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 try:
                     add_journal(s_data)
                 except Exception as e:
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
-def on_error(ws, error):
-    loguru.logger.error(f"Error: {error}, {traceback.format_exc()}")
-
-def on_close(ws, close_status_code, close_msg):
-    print("WebSocket closed")
-
-def on_open(ws, pairs):
-    params = [f"{pair.lower()}@ticker" for pair in pairs]
-    ws.send(json.dumps({
-        "method": "SUBSCRIBE",
-        "params": params,
-        "id": 1
-    }))
-    print(f"Subscribed to: {params}")
 
 def save_to_csv():
     global price_history
     global settings
     while True:
-        time.sleep(30)  # 30 секунд
+        time.sleep(20)  # 30 секунд
         with lock:
             reload_settings()
             if price_history:
@@ -170,46 +173,63 @@ def save_to_csv():
                         d[str(ts)] = price
                     df_list.append(d)
                 df = pd.DataFrame(df_list)
-                df.to_csv(f'binance_prices.csv', index=False)
-                loguru.logger.info(f"Data saved at {ts}")
+                df.to_csv(PRICE_SAVE_FILE, index=False)
+                loguru.logger.info(f"Data saved at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-def start_websocket(pairs):
-    websocket.enableTrace(False)
-    ws = websocket.WebSocketApp("wss://stream.binance.com:9443/ws",
-                                on_open=lambda ws: on_open(ws, pairs),
-                                on_message=on_message,
-                                on_error=on_error,
-                                on_close=on_close)
-    ws.run_forever()
 
-def get_usdt_pairs():
-    global spot_pairs
-    global futures_pairs
-    # Получите все символы для futures
-    markets_fapi = binance.fapiPublicGetExchangeInfo()
-    symbols_fapi = [market['symbol'] for market in markets_fapi['symbols']]
-    futures_pairs = [item for item in symbols_fapi if item.endswith('USDT')]
-    loguru.logger.info("Wait 3 seconds for spots info")
-    time.sleep(3)
-    # Получите все символы для spot
-    markets = binance.publicGetExchangeInfo()
-    symbols = [market['symbol'] for market in markets['symbols']]
-    spot_pairs = [item for item in symbols if item.endswith('USDT')]
-    
-    loguru.logger.success(f"Found binance FUTURES pairs: {len(futures_pairs)}, SPOT pairs: {len(spot_pairs)}")
-    return spot_pairs
+def get_oi_candles(symbol, period):
+    url = 'https://fapi.binance.com/futures/data/openInterestHist'
+    response = requests.get(url, params={
+        "symbol": symbol,
+        "period": "5m",
+        "limit": period,
+    })
+
+    if response.status_code == 200:
+        prices = response.json()
+        return prices
+    else:
+        loguru.logger.error(f"Error fetching data from Binance API , code: {response.status_code}, data: {response.text}")
+        return None
+
+
+def get_futures_prices():
+    url = 'https://fapi.binance.com/fapi/v2/ticker/price'
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        prices = response.json()
+        return prices
+    else:
+        loguru.logger.error(f"Error fetching data from Binance API , code: {response.status_code}, data: {response.text}")
+        return None
+
+
+def get_spot_prices():
+    url = 'https://api.binance.com/api/v3/ticker/price'
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        prices = response.json()
+        return prices
+    else:
+        loguru.logger.error(f"Error fetching data from Binance API , code: {response.status_code}, data: {response.text}")
+        return None
+
+
+
+def tickers_receiver():
+    while True:
+        prices = get_spot_prices() if settings['use_spot'] else get_futures_prices()
+        for price in prices:
+            update_price(price)
+
 
 if __name__ == "__main__":
-    usdt_pairs = get_usdt_pairs()
-    num_pairs = len(usdt_pairs)
-    max_pairs_per_ws = 210
     reload_settings()
 
     # Запуск нескольких подключений WebSocket
-    for i in range(0, num_pairs, max_pairs_per_ws):
-        pairs = usdt_pairs[i:i + max_pairs_per_ws]
-        loguru.logger.info(f"{i}, {i + max_pairs_per_ws}, {len(pairs)}")
-        threading.Thread(target=start_websocket, args=(pairs,)).start()
+    threading.Thread(target=tickers_receiver).start()
 
     # Запуск сохранения данных
     threading.Thread(target=save_to_csv).start()
