@@ -91,6 +91,17 @@ def update_price(message):
     # print(timestamp)
     # print(symbol,"-",price, timestamp)
     with lock:
+        
+        MAX_MINUTES = settings['max_save_minutes']
+        N = settings['check_per_minutes']
+        M = settings['min_change_percent']
+        
+        C2 = settings.get('min_change_percent_smooth', 0)
+        COI = settings.get('min_oi_change', 0)
+        CCVD = settings.get('min_cvd_change', 0)
+        CVVC = settings.get('min_vert_vols_change', 0)
+        
+        
         if symbol not in price_history:
             # If no prices yet
             price_history[symbol] = []
@@ -102,17 +113,11 @@ def update_price(message):
             else:
                 # If new candle started add open_time+open_price
                 price_history[symbol].append((curr_minute, price))
+                # Сохраняем только последние 20 минут
+                if len(price_history[symbol]) > MAX_MINUTES:
+                    price_history[symbol].pop(0)
 
         price_history[symbol][-1] = (curr_minute, price)
-
-        
-        MAX_MINUTES = settings['max_save_minutes']
-        N = settings['check_per_minutes']
-        M = settings['min_change_percent']
-
-        # Сохраняем только последние 20 минут
-        if len(price_history[symbol]) > MAX_MINUTES:
-            price_history[symbol].pop(0)
 
         # print(N, M, MAX_MINUTES)
 
@@ -131,15 +136,14 @@ def update_price(message):
             change_amount_dump = (float(max_price) - float(current_price)) / float(max_price) * 100
             # print(change_amount_pump, change_amount_dump, M)
             # print(old_price, current_price, change_amount)
-            min_oi_candls = settings['min_open_interest_same_dir_candles']
-            oi_candles_pump = True
-            oi_candles_dump = True
-            if min_oi_candls > 0:
-                oi_candles = get_oi_candles(symbol, min_oi_candls)
-                oi_candles_pump = all([oi_candles[i] > oi_candles[i] for i in range(len(oi_candles) - 1)])
-                oi_candles_dump = all([oi_candles[i] < oi_candles[i] for i in range(len(oi_candles) - 1)])
+            # oi_candles_pump = True
+            # oi_candles_dump = True
+            # if min_oi_candls > 0:
+            #     oi_candles = get_oi_candles(symbol, min_oi_candls)
+            #     oi_candles_pump = all([oi_candles[i] > oi_candles[i] for i in range(len(oi_candles) - 1)])
+            #     oi_candles_dump = all([oi_candles[i] < oi_candles[i] for i in range(len(oi_candles) - 1)])
                 
-            if change_amount_pump >= M and oi_candles_pump and settings['enable_pump']:
+            if change_amount_pump >= M and settings['enable_pump']:
                 loguru.logger.info(f"{symbol} price PUMPED by {change_amount_pump:.2f}% over the last {N} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                 s_data = {"exchange": "binance", "symbol": symbol, "type": "pump", "mode": "price", "change_amount": f"{change_amount_pump:.2f}%",
                           "interval": N, "old_price": min_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
@@ -148,7 +152,7 @@ def update_price(message):
                 except Exception as e:
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
-            if change_amount_dump >= M and oi_candles_dump and settings['enable_pump']:
+            if change_amount_dump >= M and settings['enable_pump']:
                 loguru.logger.info(f"{symbol} price DUMPED by {change_amount_dump:.2f}% over the last {N} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                 s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount_dump:.2f}%",
                           "interval": N, "old_price": max_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
