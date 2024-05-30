@@ -62,7 +62,7 @@ def add_journal(data):
         if ('created_at' not in log_entry) or ('symbol' not in log_entry):
             continue
         log_time = datetime.strptime(log_entry["created_at"], "%Y-%m-%d %H:%M:%S")
-        if log_entry["symbol"] == data["symbol"] and log_entry["type"] == data["type"] and now - log_time < timedelta(minutes=settings['check_per_minutes']):
+        if log_entry["symbol"] == data["symbol"] and log_entry["type"] == data["type"] and datetime.now() - log_time < timedelta(minutes=settings['check_per_minutes']):
             return  # Запись уже существует, не добавляем дубликат
 
     # Добавление новой записи
