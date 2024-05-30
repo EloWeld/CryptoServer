@@ -43,7 +43,7 @@ def add_journal(data):
         lines = f.readlines()
 
     # Проверка на дублирование
-    now = int(datetime.now().timestamp()) // 60
+    now = datetime.now()
     for line in lines:
         log_entry = json.loads(line)
         if 'created_at' not in log_entry or 'symbol' not in log_entry:
@@ -92,6 +92,9 @@ def on_message(ws, message):
             else:
                 # If new candle started add open_time+open_price
                 price_history[symbol].append((curr_minute, price))
+                # Сохраняем только последние 20 минут
+                if len(price_history[symbol]) > MAX_MINUTES:
+                    price_history[symbol].pop(0)
         
         price_history[symbol][-1] = (curr_minute, price)
         
@@ -100,14 +103,10 @@ def on_message(ws, message):
         N = settings['check_per_minutes']
         M = settings['min_change_percent']
         
-        if USE_SPOT == False:
+        if not USE_SPOT:
             if symbol not in futures_pairs:
                 return
         
-        # Сохраняем только последние 20 минут
-        if len(price_history[symbol]) > MAX_MINUTES:
-            price_history[symbol].pop(0)
-
         # print(N, M, MAX_MINUTES)
 
         if len(price_history[symbol]) > N:
@@ -120,9 +119,8 @@ def on_message(ws, message):
             else:
                 min_price = old_price
                 max_price = old_price
-            current_price = price_history[symbol][-1][1]
-            change_amount_pump = (float(current_price) - float(min_price)) / float(min_price) * 100
-            change_amount_dump = (float(max_price) - float(current_price)) / float(max_price) * 100
+            change_amount_pump = (float(price) - float(min_price)) / float(min_price) * 100
+            change_amount_dump = (float(max_price) - float(price)) / float(max_price) * 100
             # print(old_price, current_price, change_amount)
             if change_amount_pump >= M:
                 loguru.logger.info(f"{symbol} price PUMPED by {change_amount_pump:.2f}% over the last {N} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -186,9 +184,9 @@ def get_usdt_pairs():
     global spot_pairs
     global futures_pairs
     # Получите все символы для futures
-    markets_fapi = binance.fapiPublicGetExchangeInfo()
-    symbols_fapi = [market['symbol'] for market in markets_fapi['symbols']]
-    futures_pairs = [item for item in symbols_fapi if item.endswith('USDT')]
+    markets = binance.fapiPublicGetExchangeInfo()
+    symbols = [market['symbol'] for market in markets['symbols']]
+    futures_pairs = [item for item in symbols if item.endswith('USDT')]
     loguru.logger.info("Wait 3 seconds for spots info")
     time.sleep(3)
     # Получите все символы для spot

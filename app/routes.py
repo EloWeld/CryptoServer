@@ -91,6 +91,9 @@ def settings_page():
         settings['min_change_percent'] = float(request.form['min_change_percent'].replace(',','.'))
         settings['use_spot'] = 'use_spot' in request.form
         settings['use_wicks'] = 'use_wicks' in request.form
+        settings['enable_pump'] = 'enable_pump' in request.form
+        settings['enable_dump'] = 'enable_dump' in request.form
+        
         save_settings(settings)
         return redirect('/')
     settings = load_settings()
