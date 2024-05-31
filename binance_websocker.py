@@ -44,6 +44,7 @@ def reload_settings():
 
 
 def add_journal(data):
+    global settings
     log_file = CHANGES_LOG_FILE
     max_lines = 2000
 
@@ -69,7 +70,19 @@ def add_journal(data):
     if data['type'] != "error":
         send_webhook(settings, data['symbol'], data, now)
         
-    spam_all(f"<b>Новая</b> запись! {data}")
+    if data['type'] == "pump":
+        spam_all(f"<b>🟢 Новый ПАМП!</b>"
+                 f"Монета: <code>{data['symbol']}</code> <a href='coin'>ССЫЛКА</a>"
+                 f"Изменение: <code>{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)"
+                 F"Сайт: {settings['domain']}")
+    elif data['type'] == "dump":
+        spam_all(f"<b>🔴 Новый ДАМП!</b>"
+                 f"Монета: <code>{data['symbol']}</code> <a href='coin'>ССЫЛКА</a>"
+                 f"Изменение: <code>-{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)"
+                 F"Сайт: {settings['domain']}")
+    else:
+        spam_all(f"<b>⚠️ Странное поведение!</b>"
+                 f"Данные: <code>{data}</code>")
 
     # Оставляем только последние 2000 строк
     if len(lines) > max_lines:
