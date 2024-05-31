@@ -4,11 +4,12 @@
   // Для получения дополнительной информации посетите: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+
     {
       "name": "Отладчик Tickers",
       "type": "debugpy",
       "request": "launch",
-      "program": "get_all_tickers.py",
+      "program": "binance_websocker.py",
       "console": "integratedTerminal"
     },
     {

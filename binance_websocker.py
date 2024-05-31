@@ -71,17 +71,19 @@ def add_journal(data):
         send_webhook(settings, data['symbol'], data, now)
         
     if data['type'] == "pump":
-        spam_all(f"<b>🟢 Новый ПАМП!</b>"
-                 f"Монета: <code>{data['symbol']}</code> <a href='coin'>ССЫЛКА</a>"
-                 f"Изменение: <code>{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)"
-                 F"Сайт: {settings['domain']}")
+        spam_all(f"<b>🟢 Новый ПАМП!</b>\n"
+                 f"Монета: <code>{data['symbol']}</code> <a href='coin'>ССЫЛКА</a>\n"
+                 f"Изменение: <code>{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
+                 f"Сайт: {settings['domain']}\n"
+                 )
     elif data['type'] == "dump":
-        spam_all(f"<b>🔴 Новый ДАМП!</b>"
-                 f"Монета: <code>{data['symbol']}</code> <a href='coin'>ССЫЛКА</a>"
-                 f"Изменение: <code>-{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)"
-                 F"Сайт: {settings['domain']}")
+        spam_all(f"<b>🔴 Новый ДАМП!</b>\n"
+                 f"Монета: <code>{data['symbol']}</code> <a href='coin'>ССЫЛКА</a>\n"
+                 f"Изменение: <code>-{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
+                 f"Сайт: {settings['domain']}\n"
+                 )
     else:
-        spam_all(f"<b>⚠️ Странное поведение!</b>"
+        spam_all(f"<b>⚠️ Странное поведение!</b>\n"
                  f"Данные: <code>{data}</code>")
 
     # Оставляем только последние 2000 строк
@@ -176,7 +178,7 @@ def update_price(message):
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
             
             if change_amount_pump >= C2 and settings['enable_pump']:
-                oi = get_oi_candles(symbol, N)
+                oi = get_oi_candles(symbol, 2)
                 if all([oi[i] < oi[i+1] for i in range(N-1)]):
                     cvd = get_cvd_candles(symbol, N)
                     if all([cvd[i] < cvd[i+1] for i in range(N-1)]):
@@ -224,10 +226,10 @@ def save_to_csv():
 
 
 def get_oi_candles(symbol: str, period):
-    url = 'https://open-api.coinglass.com/public/v2/open_interest_history?symbol=BTC&time_type=all&currency=USD'
+    url = 'https://fapi.binance.com/futures/data/openInterestHist'
     response = requests.get(url, params={
-        "symbol": symbol.replace('USDT', ''),
-        "period": "1m",
+        "symbol": symbol,
+        "period": "5m",
         "limit": period,
     })
 
@@ -240,7 +242,29 @@ def get_oi_candles(symbol: str, period):
 
 
 def get_cvd_candles(symbol, period):
-    pass    
+    # Запрос агрегированных сделок за последние три минуты
+    trades_response = requests.get(f"https://fapi.binance.com/fapi/v3/aggTrades", params={
+        "symbol": symbol,
+        "startTime": period,
+        "endTime": datetime.now()
+    })
+    trades = trades_response.json()
+
+    # Расчёт CVD
+    cvd = sum(float(trade['q']) if trade['m'] else -float(trade['q']) for trade in trades)
+    return cvd
+
+
+def get_v_volumes(symbol, limit=100):
+    # Запрос данных ордербука (глубина рынка)
+    order_book_response = requests.get(f"https://fapi.binance.com/fapi/v1/depth", params={"symbol": symbol, "limit": limit})
+    order_book = order_book_response.json()
+
+    # Вертикальные объёмы
+    bids_volumes = {level[0]: float(level[1]) for level in order_book['bids']}
+    asks_volumes = {level[0]: float(level[1]) for level in order_book['asks']}
+
+
 
 
 def get_futures_prices():
