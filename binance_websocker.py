@@ -75,19 +75,19 @@ def add_journal(data):
         
     if data['type'] == "pump":
         spam_all(f"<b>🟢 Новый ПАМП!</b>\n"
-                 f"Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
-                 f"Биржа/Мод: <code>{data['exchange']}</code>\n"
-                 f"Изменение: <code>{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
-                 f"Сайт: {settings['domain']}\n"
-                 f"Сигналов за сутки: {len([x for x in log_entries if datetime.strptime(x['created_at'], "%Y-%m-%d %H:%M:%S") > datetime(nowd.year, nowd.month, nowd.day)])}"
+                 f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
+                 f"🎯 Биржа/Мод: <code>{data['exchange']}</code>\n"
+                 f"📈 Изменение: <code>{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
+                 f"🌐 Сайт: {settings['domain']}\n"
+                 f"📣 Сигналов за сутки: {len([x for x in log_entries if datetime.strptime(x['created_at'], "%Y-%m-%d %H:%M:%S") > datetime(nowd.year, nowd.month, nowd.day)])}"
                  )
     elif data['type'] == "dump":
         spam_all(f"<b>🔴 Новый ДАМП!</b>\n"
-                 f"Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
-                 f"Биржа/Мод: <code>{data['exchange']}</code>\n"
-                 f"Изменение: <code>-{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
-                 f"Сайт: {settings['domain']}\n"
-                 f"Сигналов за сутки: {len([x for x in log_entries if datetime.strptime(x['created_at'], "%Y-%m-%d %H:%M:%S") > datetime(nowd.year, nowd.month, nowd.day)])}"
+                 f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
+                 f"🎯 Биржа/Мод: <code>{data['exchange']}</code>\n"
+                 f"📉 Изменение: <code>-{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
+                 f"🌐 Сайт: {settings['domain']}\n"
+                 f"📣 Сигналов за сутки: {len([x for x in log_entries if datetime.strptime(x['created_at'], "%Y-%m-%d %H:%M:%S") > datetime(nowd.year, nowd.month, nowd.day)])}"
                  )
     else:
         spam_all(f"<b>⚠️ Странное поведение!</b>\n"
@@ -117,6 +117,7 @@ def update_price(message):
         
         MAX_MINUTES = settings['max_save_minutes']
         N = settings['check_per_minutes']
+        N2 = settings['check_per_minutes_mode_2']
         C1 = settings['price_change_percent']
         
         C2 = settings.get('price_change_trigger_percent', 0)
@@ -176,25 +177,39 @@ def update_price(message):
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
             if change_amount_dump >= C1 and settings['enable_dump']:
-                loguru.logger.info(f"{symbol} price DUMPED by {change_amount_dump:.2f}% over the last {N} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                loguru.logger.info(f"{symbol} price DUMPED by {change_amount_dump:.2f}% over the last {N2} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                 s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount_dump:.2f}%",
-                          "interval": N, "old_price": max_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                          "interval": N2, "old_price": max_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 try:
                     add_journal(s_data)
                 except Exception as e:
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
+                    
+        if len(price_history[symbol]) > N2:
+            old_price = price_history[symbol][-(N2+1)][1]
+
+            if settings['use_wicks']:
+                min_price = min([x[1] for x in price_history[symbol][-(N2+1):-1]])
+                max_price = max([x[1] for x in price_history[symbol][-(N2+1):-1]])
+            else:
+                min_price = old_price
+                max_price = old_price
+            
+            current_price = price_history[symbol][-1][1]
+            change_amount_pump = (float(current_price) - float(min_price)) / float(min_price) * 100
+            change_amount_dump = (float(max_price) - float(current_price)) / float(max_price) * 100
             
             if change_amount_pump >= C2 and settings['enable_pump']:
-                oi = sorted(get_oi_candles(symbol, 2), key=lambda x: x['timestamp'])
+                oi = sorted(get_oi_candles(symbol, max(2, N2 // 5)), key=lambda x: x['timestamp'])
                 oi = [float(x['sumOpenInterest']) for x in oi]
-                oi_change = (oi[1] - oi[0]) / oi[0] * 100
+                oi_change = (oi[-1] - oi[0]) / oi[0] * 100
                 if oi_change > COI:
-                    cvd_change = get_cvd_change(symbol, N+1)
+                    cvd_change = get_cvd_change(symbol, N2+1)
                     if cvd_change > CCVD:
-                        volumes_change = get_volumes_change(symbol, N+1)
+                        volumes_change = get_volumes_change(symbol, N2+1)
                         if volumes_change > CVVC:
                             # Smooth pump/dump activated
-                            loguru.logger.info(f"{symbol} price SMOOTHED PUMPED by {change_amount_pump:.2f}% over the last {N} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                            loguru.logger.info(f"{symbol} price SMOOTHED PUMPED by {change_amount_pump:.2f}% over the last {N2} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                             s_data = {"exchange": "binance_smooth", "symbol": symbol, "type": "pump", "mode": "smooth", "change_amount": f"{change_amount_pump:.2f}%", "interval": N, "old_price": min_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                             try:
                                 add_journal(s_data)
@@ -202,16 +217,16 @@ def update_price(message):
                                 loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
             if change_amount_dump >= C2 and settings['enable_dump']:
-                oi = sorted(get_oi_candles(symbol, 2), key=lambda x: x['timestamp'])
+                oi = sorted(get_oi_candles(symbol, max(2, N2 // 5)), key=lambda x: x['timestamp'])
                 oi = [float(x['sumOpenInterest']) for x in oi]
-                oi_change = (oi[1] - oi[0]) / oi[0] * 100
+                oi_change = (oi[-1] - oi[0]) / oi[0] * 100
                 if -oi_change > COI:
-                    cvd_change = get_cvd_change(symbol, N+1)
+                    cvd_change = get_cvd_change(symbol, N2+1)
                     if -cvd_change > CCVD:
-                        volumes_change = get_volumes_change(symbol, N+1)
+                        volumes_change = get_volumes_change(symbol, N2+1)
                         if -volumes_change > CVVC:
                             # Smooth pump/dump activated
-                            loguru.logger.info(f"{symbol} price SMOOTHED DUMPED by {change_amount_dump:.2f}% over the last {N} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                            loguru.logger.info(f"{symbol} price SMOOTHED DUMPED by {change_amount_dump:.2f}% over the last {N2} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                             s_data = {"exchange": "binance_smooth", "symbol": symbol, "type": "dump", "mode": "smooth", "change_amount": f"{change_amount_dump:.2f}%", "interval": N, "old_price": max_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                             try:
                                 add_journal(s_data)

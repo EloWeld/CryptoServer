@@ -92,6 +92,7 @@ def settings_page():
         settings['dump_data'] = request.form['dump_data']
         
         settings['check_per_minutes'] = int(request.form['check_per_minutes'])
+        settings['check_per_minutes_mode_2'] = int(request.form['check_per_minutes_mode_2'])
         settings['max_save_minutes'] = int(request.form['max_save_minutes'])
         
         settings['price_change_percent'] = float(request.form['price_change_percent'])
@@ -99,6 +100,7 @@ def settings_page():
         settings['oi_change_percent'] = float(request.form['oi_change_percent'])
         settings['cvd_change_percent'] = float(request.form['cvd_change_percent'])
         settings['v_volumes_change_percent'] = float(request.form['v_volumes_change_percent'])
+        
         
         settings['use_spot'] = 'use_spot' in request.form
         settings['use_wicks'] = 'use_wicks' in request.form

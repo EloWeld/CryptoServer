@@ -10,7 +10,10 @@
 
 <body>
     <div class="container mx-auto p-4 md:w-1/2">
+        <div class="flex flex-row gap-5 items-start justify-start">
+            <button class=" w-9 h-9 bg-blue-500 text-white rounded-full flex items-center justify-center" id="back">←</button>
         <h1 class="text-2xl font-bold mb-4">Settings</h1>
+        </div>
         <form action="/settings" method="POST" class="space-y-4">
             <div>
                 <label for="domain" class="block text-sm font-medium text-gray-700">Domain</label>
@@ -64,29 +67,24 @@
             </div>
 
             <div class="flex flex-row justify-between gap-3">
-                <div class="w-2/4">
-                    <label for="check_per_minutes" class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">Check
-                        per
-                        minutes</label>
-                    <input type="number" id="check_per_minutes" name="check_per_minutes"
-                        value="{{ settings.check_per_minutes }}" required
-                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
-                </div>
-                <div class="w-2/4">
-                    <label for="max_save_minutes" class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">Maximum
-                        save
-                        minutes</label>
-                    <input type="number" id="max_save_minutes" name="max_save_minutes"
-                        value="{{ settings.max_save_minutes }}" required
-                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
-                </div>
+                <label for="max_save_minutes" class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">Maximum
+                    save minutes</label>
+                <input type="number" id="max_save_minutes" name="max_save_minutes"
+                    value="{{ settings.max_save_minutes }}" required
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
             </div>
 
 
             <div class="flex flex-row justify-between gap-3">
                 <div class="w-2/4">
                     <label class="block text-lg font-medium text-gray-700">Mode 1</label>
-                    <label for="price_change_percent" class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">Price
+                    <label for="check_per_minutes" class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">Check
+                        per minutes</label>
+                    <input type="number" id="check_per_minutes" name="check_per_minutes"
+                        value="{{ settings.check_per_minutes }}" required
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
+                    <label for="price_change_percent"
+                        class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">Price
                         change
                         percent</label>
                     <input type="text" pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]" id="price_change_percent"
@@ -95,20 +93,28 @@
                 </div>
                 <div class="w-2/4">
                     <label class="block text-lg font-medium text-gray-700">Mode 2</label>
-                    <label for="price_change_trigger_percent" class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">Price
+                    <label for="check_per_minutes_mode_2"
+                        class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">Check
+                        per
+                        minutes Mode 2</label>
+                    <input type="number" id="check_per_minutes_mode_2" name="check_per_minutes_mode_2"
+                        value="{{ settings.check_per_minutes_mode_2 }}" required
+                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
+                    <label for="price_change_trigger_percent"
+                        class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">Price
                         change trigger
                         percent</label>
                     <input type="text" pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]" id="price_change_trigger_percent"
                         name="price_change_trigger_percent" value="{{ settings.price_change_trigger_percent }}" required
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
-                    <label for="oi_change_percent"
-                        class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">OI change
+                    <label for="oi_change_percent" class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">OI
+                        change
                         percent</label>
                     <input type="text" pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]" id="oi_change_percent"
                         name="oi_change_percent" value="{{ settings.oi_change_percent }}" required
                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2">
-                    <label for="cvd_change_percent"
-                        class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">CVD change
+                    <label for="cvd_change_percent" class="md:h-10 lg:h-5 block text-sm font-medium text-gray-700">CVD
+                        change
                         percent</label>
                     <input type="text" pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]" id="cvd_change_percent"
                         name="cvd_change_percent" value="{{ settings.cvd_change_percent }}" required
@@ -141,6 +147,11 @@
             <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Save</button>
         </form>
     </div>
+    <script>
+        document.getElementById("back").addEventListener("click", function () {
+            window.history.back();
+        });
+    </script>
 </body>
 
 </html>
