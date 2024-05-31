@@ -70,6 +70,15 @@ def add_journal(data):
 
     # Добавление новой записи
     lines.append(json.dumps(data, ensure_ascii=False, default=str) + "\n")
+    
+    # Оставляем только последние 2000 строк
+    if len(lines) > max_lines:
+        lines = lines[-max_lines:]
+
+    # Запись обновленного журнала
+    with open(log_file, 'w', encoding='utf-8') as f:
+        f.writelines(lines)
+        
     if data['type'] != "error":
         send_webhook(settings, data['symbol'], data, now)
 
@@ -89,15 +98,7 @@ def add_journal(data):
                  f"📣 Сигналов за сутки: {len([x for x in log_entries if datetime.datetime.strptime(x['created_at'], '%Y-%m-%d %H:%M:%S') > datetime.datetime(nowd.year, nowd.month, nowd.day)])}")
     else:
         spam_all(f"<b>⚠️ Странное поведение!</b>\n"
-                 f"Данные: <code>{data}</code>")
-
-    # Оставляем только последние 2000 строк
-    if len(lines) > max_lines:
-        lines = lines[-max_lines:]
-
-    # Запись обновленного журнала
-    with open(log_file, 'w', encoding='utf-8') as f:
-        f.writelines(lines)
+                f"Данные: <code>{data}</code>")
 
 
 def update_price(message):
@@ -105,7 +106,7 @@ def update_price(message):
 
     symbol = message['symbol']
     price = float(message['price'])
-    curr_minute = (int(datetime.datetime.now().timestamp()) // 60) * 60
+    curr_minute = (int(time.time()) // 60)
 
     with lock:
         MAX_MINUTES = settings['max_save_minutes']
@@ -139,7 +140,7 @@ def update_price(message):
             return change_amount_pump, change_amount_dump, min_price, max_price
 
         def log_and_journal(symbol, change_amount, change_type, mode, min_price, max_price, interval, current_price):
-            loguru.logger.info(f"{symbol} price {change_type.upper()} by {change_amount:.2f}% over the last {interval} minutes; Datetime: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            loguru.logger.success(f"{symbol} price {change_type.upper()} by {change_amount:.2f}% over the last {interval} minutes; Datetime: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             s_data = {
                 "exchange": "binance" if mode == "price" else "binance_smooth",
                 "symbol": symbol,
@@ -281,7 +282,10 @@ def tickers_receiver():
     while True:
         prices = get_spot_prices() if settings['use_spot'] else get_futures_prices()
         for price in prices:
-            update_price(price)
+            try:
+                update_price(price)
+            except Exception as e:
+                loguru.logger.error(f"Error in cycle {e} {traceback.format_exc()}")
 
 
 if __name__ == "__main__":
