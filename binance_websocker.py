@@ -104,7 +104,7 @@ def update_price(message):
     global price_history, settings, spot_pairs, futures_pairs
 
     symbol = message['symbol']
-    price = message['price']
+    price = float(message['price'])
     curr_minute = (int(datetime.datetime.now().timestamp()) // 60) * 60
 
     with lock:
