@@ -53,12 +53,15 @@ def add_journal(data):
         lines = f.readlines()
 
     # Проверка на дублирование
-    now = (int(datetime.now().timestamp()) // 60) * 60
+    nowd = datetime.now()
+    now = (int(nowd.timestamp()) // 60) * 60
+    log_entries = []
     for line in lines:
         try:
             log_entry = json.loads(line)
         except Exception as e:
             continue
+        log_entries.append(log_entry)
         if ('created_at' not in log_entry) or ('symbol' not in log_entry):
             continue
         log_time = datetime.strptime(log_entry["created_at"], "%Y-%m-%d %H:%M:%S")
@@ -72,15 +75,19 @@ def add_journal(data):
         
     if data['type'] == "pump":
         spam_all(f"<b>🟢 Новый ПАМП!</b>\n"
-                 f"Монета: <code>{data['symbol']}</code> <a href='coin'>ССЫЛКА</a>\n"
+                 f"Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
+                 f"Биржа/Мод: <code>{data['exchange']}</code>\n"
                  f"Изменение: <code>{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
                  f"Сайт: {settings['domain']}\n"
+                 f"Сигналов за сутки: {len([x for x in log_entries if datetime.strptime(x['created_at'], "%Y-%m-%d %H:%M:%S") > datetime(nowd.year, nowd.month, nowd.day)])}"
                  )
     elif data['type'] == "dump":
         spam_all(f"<b>🔴 Новый ДАМП!</b>\n"
-                 f"Монета: <code>{data['symbol']}</code> <a href='coin'>ССЫЛКА</a>\n"
+                 f"Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
+                 f"Биржа/Мод: <code>{data['exchange']}</code>\n"
                  f"Изменение: <code>-{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
                  f"Сайт: {settings['domain']}\n"
+                 f"Сигналов за сутки: {len([x for x in log_entries if datetime.strptime(x['created_at'], "%Y-%m-%d %H:%M:%S") > datetime(nowd.year, nowd.month, nowd.day)])}"
                  )
     else:
         spam_all(f"<b>⚠️ Странное поведение!</b>\n"
@@ -178,32 +185,38 @@ def update_price(message):
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
             
             if change_amount_pump >= C2 and settings['enable_pump']:
-                oi = get_oi_candles(symbol, 2)
-                if all([oi[i] < oi[i+1] for i in range(N-1)]):
-                    cvd = get_cvd_candles(symbol, N)
-                    if all([cvd[i] < cvd[i+1] for i in range(N-1)]):
-                        # Smooth pump/dump activated
-                        loguru.logger.info(f"{symbol} price PUMPED by {change_amount_pump:.2f}% over the last {N} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                        s_data = {"exchange": "binance", "symbol": symbol, "type": "pump", "mode": "price", "change_amount": f"{change_amount_pump:.2f}%",
-                                "interval": N, "old_price": min_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-                        try:
-                            add_journal(s_data)
-                        except Exception as e:
-                            loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
+                oi = sorted(get_oi_candles(symbol, 2), key=lambda x: x['timestamp'])
+                oi = [float(x['sumOpenInterest']) for x in oi]
+                oi_change = (oi[1] - oi[0]) / oi[0] * 100
+                if oi_change > COI:
+                    cvd_change = get_cvd_change(symbol, N+1)
+                    if cvd_change > CCVD:
+                        volumes_change = get_volumes_change(symbol, N+1)
+                        if volumes_change > CVVC:
+                            # Smooth pump/dump activated
+                            loguru.logger.info(f"{symbol} price SMOOTHED PUMPED by {change_amount_pump:.2f}% over the last {N} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                            s_data = {"exchange": "binance_smooth", "symbol": symbol, "type": "pump", "mode": "smooth", "change_amount": f"{change_amount_pump:.2f}%", "interval": N, "old_price": min_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                            try:
+                                add_journal(s_data)
+                            except Exception as e:
+                                loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
             if change_amount_dump >= C2 and settings['enable_dump']:
-                oi = get_oi_candles(symbol, N)
-                if all([oi[i] < oi[i+1] for i in range(N-1)]):
-                    cvd = get_cvd_candles(symbol, N)
-                    if all([cvd[i] < cvd[i+1] for i in range(N-1)]):
-                        # Smooth pump/dump activated
-                        loguru.logger.info(f"{symbol} price DUMPED by {change_amount_dump:.2f}% over the last {N} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                        s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount_dump:.2f}%",
-                                "interval": N, "old_price": max_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-                        try:
-                            add_journal(s_data)
-                        except Exception as e:
-                            loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
+                oi = sorted(get_oi_candles(symbol, 2), key=lambda x: x['timestamp'])
+                oi = [float(x['sumOpenInterest']) for x in oi]
+                oi_change = (oi[1] - oi[0]) / oi[0] * 100
+                if -oi_change > COI:
+                    cvd_change = get_cvd_change(symbol, N+1)
+                    if -cvd_change > CCVD:
+                        volumes_change = get_volumes_change(symbol, N+1)
+                        if -volumes_change > CVVC:
+                            # Smooth pump/dump activated
+                            loguru.logger.info(f"{symbol} price SMOOTHED DUMPED by {change_amount_dump:.2f}% over the last {N} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                            s_data = {"exchange": "binance_smooth", "symbol": symbol, "type": "dump", "mode": "smooth", "change_amount": f"{change_amount_dump:.2f}%", "interval": N, "old_price": max_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                            try:
+                                add_journal(s_data)
+                            except Exception as e:
+                                loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
 
 def save_to_csv():
@@ -241,30 +254,35 @@ def get_oi_candles(symbol: str, period):
         return None
 
 
-def get_cvd_candles(symbol, period):
+
+def get_cvd_change(symbol, period):
     # Запрос агрегированных сделок за последние три минуты
-    trades_response = requests.get(f"https://fapi.binance.com/fapi/v3/aggTrades", params={
+    trades_response = requests.get(f"https://fapi.binance.com/fapi/v1/trades", params={
         "symbol": symbol,
-        "startTime": period,
-        "endTime": datetime.now()
+        "limit": 1000,
     })
     trades = trades_response.json()
+    
+    # Фильтрация сделок за последние три минуты
+    past_trades = [trade for trade in trades if (period-1) * 60 <= (datetime.now() - datetime.fromtimestamp(trade['time']/1000)).seconds < period * 60]
+    current_trades = [trade for trade in trades if (datetime.now() - datetime.fromtimestamp(trade['time']/1000)).seconds <= 60]
+    # Расчёт CVD 3 минуты назад
+    past_cvd = sum(float(trade['qty']) if trade['isBuyerMaker'] else -float(trade['qty']) for trade in past_trades)
 
-    # Расчёт CVD
-    cvd = sum(float(trade['q']) if trade['m'] else -float(trade['q']) for trade in trades)
-    return cvd
+    # Расчёт текущего CVD
+    current_cvd = sum(float(trade['qty']) if trade['isBuyerMaker'] else -float(trade['qty']) for trade in current_trades)
+
+    return ((current_cvd - past_cvd) / past_cvd) * 100 if past_cvd != 0 else float('inf')
 
 
-def get_v_volumes(symbol, limit=100):
+def get_volumes_change(symbol, limit=100):
     # Запрос данных ордербука (глубина рынка)
-    order_book_response = requests.get(f"https://fapi.binance.com/fapi/v1/depth", params={"symbol": symbol, "limit": limit})
-    order_book = order_book_response.json()
+    klines_response = requests.get(f"https://fapi.binance.com/fapi/v1/klines", params={"symbol": symbol, "interval": "1m", "limit": limit})
+    volumes = [x[5] for x in sorted(klines_response.json(), key=lambda x: x[0])]
+    past_vol = volumes[0]
+    current_vol = volumes[-1]
 
-    # Вертикальные объёмы
-    bids_volumes = {level[0]: float(level[1]) for level in order_book['bids']}
-    asks_volumes = {level[0]: float(level[1]) for level in order_book['asks']}
-
-
+    return ((current_vol - past_vol) / past_vol) * 100 if past_vol != 0 else float('inf')
 
 
 def get_futures_prices():
