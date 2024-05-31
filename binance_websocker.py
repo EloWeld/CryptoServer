@@ -8,11 +8,10 @@ from datetime import datetime, timedelta
 import requests
 import loguru
 import ccxt
-binance = ccxt.binance()
 
-SETTINGS_FILE = 'settings_new.json'
-CHANGES_LOG_FILE = 'changes_log.txt'
-PRICE_SAVE_FILE = 'binance_prices.csv'
+from config import *
+from tg_utils import spam_all
+binance = ccxt.binance()
 
 # Параметры для вывода сообщений в консоль
 settings = {}
@@ -69,6 +68,8 @@ def add_journal(data):
     lines.append(json.dumps(data, ensure_ascii=False, default=str) + "\n")
     if data['type'] != "error":
         send_webhook(settings, data['symbol'], data, now)
+        
+    spam_all(f"<b>Новая</b> запись! {data}")
 
     # Оставляем только последние 2000 строк
     if len(lines) > max_lines:
@@ -94,12 +95,12 @@ def update_price(message):
         
         MAX_MINUTES = settings['max_save_minutes']
         N = settings['check_per_minutes']
-        M = settings['min_change_percent']
+        C1 = settings['price_change_percent']
         
-        C2 = settings.get('min_change_percent_smooth', 0)
-        COI = settings.get('min_oi_change', 0)
-        CCVD = settings.get('min_cvd_change', 0)
-        CVVC = settings.get('min_vert_vols_change', 0)
+        C2 = settings.get('price_change_trigger_percent', 0)
+        COI = settings.get('oi_change_percent', 0)
+        CCVD = settings.get('cvd_change_percent', 0)
+        CVVC = settings.get('v_volumes_change_percent', 0)
         
         
         if symbol not in price_history:
@@ -143,7 +144,7 @@ def update_price(message):
             #     oi_candles_pump = all([oi_candles[i] > oi_candles[i] for i in range(len(oi_candles) - 1)])
             #     oi_candles_dump = all([oi_candles[i] < oi_candles[i] for i in range(len(oi_candles) - 1)])
                 
-            if change_amount_pump >= M and settings['enable_pump']:
+            if change_amount_pump >= C1 and settings['enable_pump']:
                 loguru.logger.info(f"{symbol} price PUMPED by {change_amount_pump:.2f}% over the last {N} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                 s_data = {"exchange": "binance", "symbol": symbol, "type": "pump", "mode": "price", "change_amount": f"{change_amount_pump:.2f}%",
                           "interval": N, "old_price": min_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
@@ -152,7 +153,7 @@ def update_price(message):
                 except Exception as e:
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
-            if change_amount_dump >= M and settings['enable_dump']:
+            if change_amount_dump >= C1 and settings['enable_dump']:
                 loguru.logger.info(f"{symbol} price DUMPED by {change_amount_dump:.2f}% over the last {N} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                 s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount_dump:.2f}%",
                           "interval": N, "old_price": max_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
@@ -160,6 +161,34 @@ def update_price(message):
                     add_journal(s_data)
                 except Exception as e:
                     loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
+            
+            if change_amount_pump >= C2 and settings['enable_pump']:
+                oi = get_oi_candles(symbol, N)
+                if all([oi[i] < oi[i+1] for i in range(N-1)]):
+                    cvd = get_cvd_candles(symbol, N)
+                    if all([cvd[i] < cvd[i+1] for i in range(N-1)]):
+                        # Smooth pump/dump activated
+                        loguru.logger.info(f"{symbol} price PUMPED by {change_amount_pump:.2f}% over the last {N} minutes; Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                        s_data = {"exchange": "binance", "symbol": symbol, "type": "pump", "mode": "price", "change_amount": f"{change_amount_pump:.2f}%",
+                                "interval": N, "old_price": min_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                        try:
+                            add_journal(s_data)
+                        except Exception as e:
+                            loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
+
+            if change_amount_dump >= C2 and settings['enable_dump']:
+                oi = get_oi_candles(symbol, N)
+                if all([oi[i] < oi[i+1] for i in range(N-1)]):
+                    cvd = get_cvd_candles(symbol, N)
+                    if all([cvd[i] < cvd[i+1] for i in range(N-1)]):
+                        # Smooth pump/dump activated
+                        loguru.logger.info(f"{symbol} price DUMPED by {change_amount_dump:.2f}% over the last {N} minutes Datetime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                        s_data = {"exchange": "binance", "symbol": symbol, "type": "dump", "mode": "price", "change_amount": f"{change_amount_dump:.2f}%",
+                                "interval": N, "old_price": max_price, "curr_price": current_price, "created_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                        try:
+                            add_journal(s_data)
+                        except Exception as e:
+                            loguru.logger.error(f"Error during journal append: {e}, {traceback.format_exc()}")
 
 
 def save_to_csv():
@@ -181,11 +210,11 @@ def save_to_csv():
                 loguru.logger.info(f"Data saved at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 
-def get_oi_candles(symbol, period):
-    url = 'https://fapi.binance.com/futures/data/openInterestHist'
+def get_oi_candles(symbol: str, period):
+    url = 'https://open-api.coinglass.com/public/v2/open_interest_history?symbol=BTC&time_type=all&currency=USD'
     response = requests.get(url, params={
-        "symbol": symbol,
-        "period": "5m",
+        "symbol": symbol.replace('USDT', ''),
+        "period": "1m",
         "limit": period,
     })
 
@@ -195,6 +224,10 @@ def get_oi_candles(symbol, period):
     else:
         loguru.logger.error(f"Error fetching data from Binance API , code: {response.status_code}, data: {response.text}")
         return None
+
+
+def get_cvd_candles(symbol, period):
+    pass    
 
 
 def get_futures_prices():

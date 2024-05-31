@@ -82,17 +82,27 @@ def settings_page():
         domain = request.form['domain']
         settings = load_settings()
         settings['domain'] = domain
+        
+        settings['enable_pump'] = 'enable_pump' in request.form
         settings['pump_webhook'] = request.form['pump_webhook']
-        settings['dump_webhook'] = request.form['dump_webhook']
         settings['pump_data'] = request.form['pump_data']
+        
+        settings['enable_dump'] = 'enable_dump' in request.form
+        settings['dump_webhook'] = request.form['dump_webhook']
         settings['dump_data'] = request.form['dump_data']
+        
         settings['check_per_minutes'] = int(request.form['check_per_minutes'])
         settings['max_save_minutes'] = int(request.form['max_save_minutes'])
-        settings['min_change_percent'] = float(request.form['min_change_percent'].replace(',','.'))
+        
+        settings['price_change_percent'] = float(request.form['price_change_percent'])
+        settings['price_change_trigger_percent'] = float(request.form['price_change_trigger_percent'])
+        settings['oi_change_percent'] = float(request.form['oi_change_percent'])
+        settings['cvd_change_percent'] = float(request.form['cvd_change_percent'])
+        settings['v_volumes_change_percent'] = float(request.form['v_volumes_change_percent'])
+        
         settings['use_spot'] = 'use_spot' in request.form
         settings['use_wicks'] = 'use_wicks' in request.form
-        settings['enable_pump'] = 'enable_pump' in request.form
-        settings['enable_dump'] = 'enable_dump' in request.form
+        
         
         save_settings(settings)
         return redirect('/')

@@ -101,7 +101,7 @@ def on_message(ws, message):
         USE_SPOT = settings.get('use_spot', False)
         MAX_MINUTES = settings['max_save_minutes']
         N = settings['check_per_minutes']
-        M = settings['min_change_percent']
+        M = settings['price_change_percent']
         
         if not USE_SPOT:
             if symbol not in futures_pairs:
