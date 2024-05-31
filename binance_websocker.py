@@ -75,20 +75,20 @@ def add_journal(data):
         
     if data['type'] == "pump":
         spam_all(f"<b>🟢 Новый ПАМП!</b>\n"
-                 f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
-                 f"🎯 Биржа/Мод: <code>{data['exchange']}</code>\n"
-                 f"📈 Изменение: <code>{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
-                 f"🌐 Сайт: {settings['domain']}\n"
-                 f"📣 Сигналов за сутки: {len([x for x in log_entries if datetime.strptime(x['created_at'], "%Y-%m-%d %H:%M:%S") > datetime(nowd.year, nowd.month, nowd.day)])}"
-                 )
+             f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
+             f"🎯 Биржа/Мод: <code>{data['exchange']}</code>\n"
+             f"📈 Изменение: <code>{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
+             f"🌐 Сайт: {settings['domain']}\n"
+             f"📣 Сигналов за сутки: {len([x for x in log_entries if datetime.strptime(x['created_at'], '%Y-%m-%d %H:%M:%S') > datetime(nowd.year, nowd.month, nowd.day)])}"
+             )
     elif data['type'] == "dump":
         spam_all(f"<b>🔴 Новый ДАМП!</b>\n"
-                 f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
-                 f"🎯 Биржа/Мод: <code>{data['exchange']}</code>\n"
-                 f"📉 Изменение: <code>-{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
-                 f"🌐 Сайт: {settings['domain']}\n"
-                 f"📣 Сигналов за сутки: {len([x for x in log_entries if datetime.strptime(x['created_at'], "%Y-%m-%d %H:%M:%S") > datetime(nowd.year, nowd.month, nowd.day)])}"
-                 )
+                f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
+                f"🎯 Биржа/Мод: <code>{data['exchange']}</code>\n"
+                f"📉 Изменение: <code>-{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
+                f"🌐 Сайт: {settings['domain']}\n"
+                f"📣 Сигналов за сутки: {len([x for x in log_entries if datetime.strptime(x['created_at'], '%Y-%m-%d %H:%M:%S') > datetime(nowd.year, nowd.month, nowd.day)])}"
+                )
     else:
         spam_all(f"<b>⚠️ Странное поведение!</b>\n"
                  f"Данные: <code>{data}</code>")
