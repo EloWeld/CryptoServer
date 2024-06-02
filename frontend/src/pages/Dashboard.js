@@ -6,8 +6,11 @@ import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
 import { FiVolume2, FiVolumeX } from 'react-icons/fi'; // Импорт иконок
 
-const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://127.0.0.1:5000';
 
+const socketUrl = process.env.NODE_ENV === 'production'
+  ? process.env.REACT_APP_SOCKET_URL_PROD
+  : process.env.REACT_APP_SOCKET_URL_DEV;
+console.log(socketUrl)
 
 function Dashboard({ isAuthenticated, setIsAuthenticated }) {
   const [settings, setSettings] = useState({ webhooks: [], received_hooks: [], blocked_hooks: 0 });
@@ -35,13 +38,14 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
   const [isRunning, setIsRunning] = useState(false);
   const logsEndRef = useRef(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
-
+  const lastFetchTimeRef = useRef(Date(0));
 
 
   useEffect(() => {
     try {
       const token = localStorage.getItem('token');
       const socket = io(socketUrl, {
+        path: '/api/socket.io',
         withCredentials: true,
         auth: {
           token: token,
@@ -135,7 +139,6 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
     fetchProcessStatus();
   }, []);
 
-  const lastFetchTimeRef = useRef(Date.now());
   useEffect(() => {
     async function fetchChanges() {
       if (Date.now() - lastFetchTimeRef.current < 5000) {
@@ -143,7 +146,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
       }
       lastFetchTimeRef.current = Date.now();
       try {
-        const response = await axios.get('/changes_log');
+        const response = await axios.get('/api/changes_log');
         const data = response.data;
         console.log(data);
 
@@ -247,8 +250,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
       <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
       <div className="container mx-auto p-4">
         <audio ref={audioRef} src="/notification.mp3" />
-
-
+  
         <div className="mt-4 border rounded flex flex-row justify-between">
           <div className='p-2'>
             <label htmlFor="timezone" className="block text-lg font-bold mb-2">Select Timezone:</label>
@@ -282,23 +284,24 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
             {audioEnabled ? 'Disable Audio Notifications' : 'Enable Audio Notifications'}
           </button>
         </div>
+  
         {/* ——————— Hooks list ——————— */}
         <div className="mt-4 p-2 border rounded">
           <h2 className="text-xl font-bold">Webhooks list</h2>
           {settings.webhooks.length === 0 ?
             (<div className="bg-gray-400 text-gray-200 rounded p-0.5 w-min">Empty</div>)
-            : (<ul className="mt-4">
+            : (<div className="mt-4">
               {settings.webhooks.map((webhook) => (
-                <li key={webhook.webhook} className="mb-2 p-2 border rounded flex justify-between items-center">
+                <div key={webhook.webhook} className="mb-2 p-2 border rounded flex justify-between items-center">
                   <p>
                     Webhook: <a href={`${settings.domain}/webhook/${webhook.webhook}`} className="text-blue-500">{`${settings.domain}/webhook/${webhook.webhook}`}</a> | Delay: {webhook.delay} seconds | Redirect to: {webhook.redirect_to_url}
                   </p>
-                  <button onClick={((e) => { deleteWebhook(webhook.webhook);})} className="bg-red-500 text-white px-4 py-2 rounded ml-4">Delete</button>
-                </li>
+                  <button onClick={((e) => { deleteWebhook(webhook.webhook); })} className="bg-red-500 text-white px-4 py-2 rounded ml-4">Delete</button>
+                </div>
               ))}
-            </ul>)}
-
+            </div>)}
         </div>
+  
         {/* ——————— Received hooks ——————— */}
         <div className="mt-4 p-2 border rounded">
           <h2 className="text-xl font-bold">Received Webhooks</h2>
@@ -311,11 +314,13 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
                 ))}
               </ul>)}
         </div>
+  
         {/* ——————— Blocked Hooks ——————— */}
         <div className="mt-4 p-2 border rounded">
           <h2 className="text-xl font-bold">Blocked Hooks</h2>
           <p>Total Blocked Hooks: {settings.blocked_hooks}</p>
         </div>
+  
         {/* ——————— Parsing process ——————— */}
         <div className='mt-4'>
           <button onClick={startProcess} disabled={isRunning} className={"bg-green-500 text-white px-4 py-2 rounded" + (isRunning ? " opacity-25" : "")}>
@@ -333,6 +338,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
             </div>
           </div>
         </div>
+  
         {/* ——————— Pumps list ——————— */}
         <div className="flex flex-col md:flex-row gap-3 justify-between">
           <div className="mt-4 p-2 border rounded w-full">
@@ -360,6 +366,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
               </tbody>
             </table>
           </div>
+  
           {/* ——————— Dumps list ——————— */}
           <div className="mt-4 p-2 border rounded w-full">
             <h2 className="text-xl font-bold border-b">Last <span className="text-red-600">DUMP</span>s</h2>

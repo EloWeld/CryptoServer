@@ -11,7 +11,7 @@ from config import Config
 db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
-socketio = SocketIO(cors_allowed_origins="*", manage_session=True)
+socketio = SocketIO()
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -25,7 +25,7 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)
-    socketio.init_app(app, cors_allowed_origins="*", manage_session=True)
+    socketio.init_app(app, cors_allowed_origins="*", manage_session=True, path='/api/socket.io')
     
     # Enable CORS
     CORS(app, resources={r"/*": {"origins": "*"}})
@@ -36,12 +36,14 @@ def create_app():
     from app.routes.settings import settings_bp
     from app.routes.user import user_bp
     from app.routes.processes import processes_bp
+    from app.routes.hooks import hooks_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(settings_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(processes_bp)
+    app.register_blueprint(hooks_bp)
     from app.routes.processes import start_price_saving_thread
     
     with app.app_context():

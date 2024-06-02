@@ -68,7 +68,7 @@ def manage_settings():
         settings.webhooks = data.get('webhooks', [])
         settings.received_hooks = data.get('received_hooks', [])
         settings.blocked_hooks = data.get('blocked_hooks', 0)
-        settings.domain = data.get('domain', "https://www.davinchi-crypto.ru")
+        settings.domain = data.get('domain', "https://www.davinchi-crypto.ru/api")
         settings.pump_webhook = data.get('pump_webhook', "https://hook.finandy.com/?")
         settings.dump_webhook = data.get('dump_webhook', "https://hook.finandy.com/?")
         settings.pump_data = data.get('pump_data', "{}")
@@ -101,7 +101,7 @@ def manage_settings():
             webhooks=[],
             received_hooks=[],
             blocked_hooks=0,
-            domain="https://www.davinchi-crypto.ru",
+            domain="https://www.davinchi-crypto.ru/api",
             pump_webhook="https://hook.finandy.com/?",
             dump_webhook="https://hook.finandy.com/?",
             pump_data="{}",

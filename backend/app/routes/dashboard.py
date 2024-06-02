@@ -11,7 +11,7 @@ dashboard_bp = Blueprint('dashboard', __name__)
 def dashboard():
     return jsonify({"message": f"Welcome, {current_user.username}!"})
 
-@dashboard_bp.route('/changes_log', methods=['GET'])
+@dashboard_bp.route('/api/changes_log', methods=['GET'])
 @login_required
 def get_changes_log():
     current_user.id
