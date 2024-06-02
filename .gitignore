@@ -162,3 +162,5 @@ changes_log.txt
 binance_prices.csv
 binance_klines.csv
 settings_new.json
+frontend/node_modules/*
+.DS_Store*

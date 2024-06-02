@@ -1,0 +1,7 @@
+.Toastify__toast--success {
+  border: 1px solid #008000A0;
+}
+
+.Toastify__toast--error {
+  border: 1px solid #ff0000A0;
+}
