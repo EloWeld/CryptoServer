@@ -6,6 +6,7 @@ import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
 import { FiVolume2, FiVolumeX } from 'react-icons/fi'; // Импорт иконок
 
+const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://127.0.0.1:5000';
 
 
 function Dashboard({ isAuthenticated, setIsAuthenticated }) {
@@ -40,7 +41,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
   useEffect(() => {
     try {
       const token = localStorage.getItem('token');
-      const socket = io('http://127.0.0.1:5000', {
+      const socket = io(socketUrl, {
         withCredentials: true,
         auth: {
           token: token,
