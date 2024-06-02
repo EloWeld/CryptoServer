@@ -7,10 +7,10 @@ import { toast } from 'react-toastify';
 import { FiVolume2, FiVolumeX } from 'react-icons/fi'; // Импорт иконок
 
 
-const socketUrl = process.env.NODE_ENV === 'production'
+const socketUrl = process.env.REACT_APP_NODE_ENV === 'production'
   ? process.env.REACT_APP_SOCKET_URL_PROD
   : process.env.REACT_APP_SOCKET_URL_DEV;
-console.log(socketUrl)
+console.log(process.env.REACT_APP_NODE_ENV)
 
 function Dashboard({ isAuthenticated, setIsAuthenticated }) {
   const [settings, setSettings] = useState({ webhooks: [], received_hooks: [], blocked_hooks: 0 });
