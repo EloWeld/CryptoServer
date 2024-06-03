@@ -285,7 +285,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
               {settings.webhooks.map((webhook) => (
                 <div key={webhook.webhook} className="mb-2 p-2 border rounded flex justify-between items-center">
                   <p>
-                    Webhook: <a href={`${settings.domain}/webhook/${webhook.webhook}`} className="text-blue-500">{`${settings.domain}/webhook/${webhook.webhook}`}</a> | Delay: {webhook.delay} seconds | Redirect to: {webhook.redirect_to_url}
+                    Webhook: <a target="_blank" href={`${settings.domain}/webhook/${webhook.webhook}`} className="text-blue-500">{`${settings.domain}/webhook/${webhook.webhook}`}</a> | Delay: {webhook.delay} seconds | Redirect to: {webhook.redirect_to_url}
                   </p>
                   <button onClick={((e) => { deleteWebhook(webhook.webhook); })} className="bg-red-500 text-white px-4 py-2 rounded ml-4">Delete</button>
                 </div>
@@ -348,7 +348,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
                 {lastPumps.map((item) => (
                   <tr key={item.id}>
                     <td className="py-2">{item.exchange}</td>
-                    <td className="py-2"><a className="text-blue-500" href={`https://www.coinglass.com/tv/Binance_${item.symbol}`}>{item.symbol}</a></td>
+                    <td className="py-2"><a target="_blank" className="text-blue-500" href={`https://www.coinglass.com/tv/Binance_${item.symbol}`}>{item.symbol}</a></td>
                     <td className="py-2">{item.change_amount}</td>
                     <td className="py-2">{item.interval} min</td>
                     <td className="py-2">{formatDate(new Date(item.created_at), timezoneOffset)}</td>
@@ -375,7 +375,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
                 {lastDumps.map((item) => (
                   <tr key={item.id}>
                     <td className="py-2">{item.exchange}</td>
-                    <td className="py-2"><a className="text-blue-500" href={`https://www.coinglass.com/tv/Binance_${item.symbol}`}>{item.symbol}</a></td>
+                    <td className="py-2"><a target="_blank" className="text-blue-500" href={`https://www.coinglass.com/tv/Binance_${item.symbol}`}>{item.symbol}</a></td>
                     <td className="py-2">{item.change_amount}</td>
                     <td className="py-2">{item.interval} min</td>
                     <td className="py-2">{formatDate(new Date(item.created_at), timezoneOffset)}</td>
