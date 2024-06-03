@@ -109,7 +109,6 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
     async function fetchUserData() {
       try {
         const userResponse = await axios.get('/api/user');
-        console.log(userResponse.data.timezone_offset)
         setTimezoneOffset(userResponse.data.timezone_offset);
       } catch (error) {
         toast.error(`'Error fetching user data: ${error}`)
@@ -148,7 +147,6 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
       try {
         const response = await axios.get('/api/changes_log');
         const data = response.data;
-        console.log(data);
 
         let newPumps = data.filter(item => item.type === 'pump');
         let newDumps = data.filter(item => item.type === 'dump');
@@ -159,11 +157,6 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
         if (lastPumps.length > 0 || lastDumps.length > 0) {
           const newPumpChanges = newPumps.filter(np => !lastPumps.some(lp => lp.id === np.id));
           const newDumpChanges = newDumps.filter(nd => !lastDumps.some(ld => ld.id === nd.id));
-
-          console.log('Last Pumps:', lastPumps);
-          console.log('Last Dumps:', lastDumps);
-          console.log('New Pump Changes:', newPumpChanges);
-          console.log('New Dump Changes:', newDumpChanges);
 
           if (newPumpChanges.length > 0 || newDumpChanges.length > 0) {
             if (audioEnabled) {
@@ -235,8 +228,6 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
       const result = await axios.delete(`/api/webhook/${webhook_id}`);
       if (result.data.result === "ok") {
         toast.info("Webhook deleted");
-        console.log(result.data);
-        setSettings(result.data.settings)
       } else {
         toast.warn(`Webhook may not deleted, ${result.data.result}`);
       }
