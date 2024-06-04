@@ -17,6 +17,5 @@ def dashboard():
 @dashboard_bp.route('/api/changes_log', methods=['GET'])
 @login_required
 def get_changes_log():
-    current_user.id
-    logs = ChangesLog.query.order_by(ChangesLog.created_at.desc()).limit(2000)
+    logs = ChangesLog.query.filter(ChangesLog.user_id == current_user.id).order_by(ChangesLog.created_at.desc()).limit(1000)
     return jsonify([asdict(log) for log in logs])

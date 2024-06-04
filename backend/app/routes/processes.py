@@ -268,16 +268,6 @@ def stop_process():
 
 
 @socketio.on('connect')
-def connect():
-    if current_user.is_authenticated:
-        join_room(current_user.id)
-        socketio.emit('log', {'data': 'Connected to server.'})
-    else:
-        socketio.emit('log', {'data': 'Authentication failed'})
-        return False
-
-
-@socketio.on('connect')
 def connect(auth: dict):
     token = auth.get('token', None) if auth else None
     if not token:
