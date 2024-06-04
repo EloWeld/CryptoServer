@@ -13,31 +13,32 @@ login_manager = LoginManager()
 migrate = Migrate()
 socketio = SocketIO()
 
+
 @login_manager.user_loader
 def load_user(user_id):
     from app.models import User
     return User.query.get(int(user_id))
 
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    
+
     db.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)
     socketio.init_app(app, cors_allowed_origins="*", manage_session=True, path='/api/socket.io')
-    
+
     # Enable CORS
     CORS(app, resources={r"/*": {"origins": "*"}})
 
-    
     from app.routes.auth import auth_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.settings import settings_bp
     from app.routes.user import user_bp
     from app.routes.processes import processes_bp
     from app.routes.hooks import hooks_bp
-    
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(settings_bp)
@@ -45,8 +46,8 @@ def create_app():
     app.register_blueprint(processes_bp)
     app.register_blueprint(hooks_bp)
     from app.routes.processes import start_price_saving_thread
-    
+
     with app.app_context():
         start_price_saving_thread()
-    
+
     return app

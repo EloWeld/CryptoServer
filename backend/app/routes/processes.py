@@ -12,6 +12,7 @@ import loguru
 
 from app.models import ChangesLog, FuturesPrice, Settings, SpotPrice, User, db
 from app.utils import *
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 processes_bp = Blueprint('processes', __name__)
 
@@ -21,28 +22,32 @@ lock = threading.Lock()
 
 
 def save_prices_to_db(app):
-    while True:
-        spot_prices = get_spot_prices()
-        futures_prices = get_futures_prices()
 
-        with app.app_context():
-            SpotPrice.query.delete(synchronize_session='evaluate')
-            FuturesPrice.query.delete(synchronize_session='evaluate')
+    with app.app_context():
+        engine = db.get_engine()
+        Session = scoped_session(sessionmaker(bind=engine))
+        session = Session()
+        while True:
+            spot_prices = get_spot_prices()
+            futures_prices = get_futures_prices()
+
+            session.query(SpotPrice).delete(synchronize_session='evaluate')
+            session.query(FuturesPrice).delete(synchronize_session='evaluate')
             for price in spot_prices:
-                db.session.add(SpotPrice(symbol=price['symbol'], price=price['price']))
+                session.add(SpotPrice(symbol=price['symbol'], price=price['price']))
             for price in futures_prices:
-                db.session.add(FuturesPrice(symbol=price['symbol'], price=price['price']))
-                
+                session.add(FuturesPrice(symbol=price['symbol'], price=price['price']))
+
             with lock:
-                db.session.commit()
+                session.commit()
+            time.sleep(2)
 
 
 def start_price_saving_thread():
     app = current_app._get_current_object()
     price_thread = threading.Thread(target=save_prices_to_db, args=(app,))
     price_thread.start()
-    
-    
+
 
 def send_webhook(settings: Settings, symbol, data, minute, user_id):
     url = settings.pump_webhook if data['type'] == 'pump' else settings.dump_webhook
@@ -60,7 +65,7 @@ def send_webhook(settings: Settings, symbol, data, minute, user_id):
 
 def add_journal(data: dict, settings: Settings, user_id: str | int):
     # Чтение существующего журнала
-    change_log: list[ChangesLog] = ChangesLog.query.filter(ChangesLog.user_id==user_id)
+    change_log: list[ChangesLog] = ChangesLog.query.filter(ChangesLog.user_id == user_id)
     # Проверка на дублирование
     nowd = datetime.datetime.now()
     now = (int(nowd.timestamp()) // 60) * 60
@@ -193,33 +198,38 @@ def update_price(price_history: dict, settings: Settings, message: FuturesPrice,
 
 def process_function(app: Flask, user_id):
     with app.app_context():
-        price_history = {}
-        user: User = User.query.get(user_id)
-        loguru.logger.info(f"Process started for user {user_id} {user.username}")
-        socketio.emit('log', {'data': f'Process started for user {user_id}.'}, room=user_id)
-        while process_running.get(user_id):
-            us: Settings = Settings.query.filter(Settings.user_id == user.id).first()
-            if us.use_spot:
-                prices = SpotPrice.query.all()
-            else:
-                prices = FuturesPrice.query.all()
-            prices_copy = deepcopy(prices)  # Создание копии объекта
-            for price in prices_copy:
-                try:
-                    update_price(price_history, us, price, user_id)
-                except Exception as e:
-                    err_msg = f"Error in cycle {e} {traceback.format_exc()}"
-                    loguru.logger.error(err_msg)
-                    socketio.emit('log', {'data': err_msg}, room=user_id)
+        engine = db.get_engine()
+        Session = scoped_session(sessionmaker(bind=engine))
+        session = Session()
 
-            # db.session.commit()
+        try:
+            price_history = {}
+            user: User = session.query(User).get(user_id)
+            loguru.logger.info(f"Process started for user {user_id} {user.username}")
+            socketio.emit('log', {'data': f'Process started for user {user_id}.'}, room=user_id)
+            while process_running.get(user_id):
+                us: Settings = session.query(Settings).filter(Settings.user_id == user.id).first()
+                if us.use_spot:
+                    prices = session.query(SpotPrice).all()
+                else:
+                    prices = session.query(FuturesPrice).all()
+                prices_copy = deepcopy(prices)  # Создание копии объекта
+                for price in prices_copy:
+                    try:
+                        update_price(price_history, us, price, user_id)
+                    except Exception as e:
+                        err_msg = f"Error in cycle {e} {traceback.format_exc()}"
+                        loguru.logger.error(err_msg)
+                        socketio.emit('log', {'data': err_msg}, room=user_id)
 
-            time.sleep(0.5)
-        loguru.logger.info(f"Process has stopped for user {user_id} {user.username}")
-        socketio.emit('log', {'data': f'Process has stopped for user {user_id} {user.username}.'}, room=user_id)
-        process_running[user_id] = False
-        if user_id in process_threads:
-            del process_threads[user_id]
+                time.sleep(0.5)
+            loguru.logger.info(f"Process has stopped for user {user_id} {user.username}")
+            socketio.emit('log', {'data': f'Process has stopped for user {user_id} {user.username}.'}, room=user_id)
+            process_running[user_id] = False
+            if user_id in process_threads:
+                del process_threads[user_id]
+        finally:
+            session.close()
 
 
 @processes_bp.route('/api/start_process', methods=['POST'])
@@ -265,13 +275,14 @@ def connect():
     else:
         socketio.emit('log', {'data': 'Authentication failed'})
         return False
-    
+
+
 @socketio.on('connect')
 def connect(auth: dict):
     token = auth.get('token', None) if auth else None
     if not token:
         loguru.logger.error(f"Disconnect, no token {auth}")
-        
+
         disconnect()
         return False
     try:

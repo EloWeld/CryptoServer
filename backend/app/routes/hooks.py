@@ -9,6 +9,7 @@ hooks_bp = Blueprint('hooks', __name__)
 
 last_hook_time = {}
 
+
 @hooks_bp.route('/api/webhook/<hook_id>', methods=['POST', 'GET'])
 def webhook(hook_id: str):
     if request.method == "GET":
@@ -18,7 +19,7 @@ def webhook(hook_id: str):
 
     data = request.json
     current_time = time.time()
-    
+
     hook = None
 
     settings_all: list[Settings] = Settings.query.all()
@@ -57,7 +58,7 @@ def webhook(hook_id: str):
 
         # Reset count after threshold is reached
         hook_calls = []
-        
+
         hook['hook_calls'] = hook_calls
         settings.webhooks = [x for x in settings.webhooks if x['webhook'] != hook_id] + [hook]
         db.session.commit()
