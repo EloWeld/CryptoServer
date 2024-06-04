@@ -41,41 +41,41 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
   const lastFetchTimeRef = useRef(Date(0));
 
 
-  useEffect(() => {
-    try {
-      const token = localStorage.getItem('token');
-      const socket = io(socketUrl, {
-        path: '/api/socket.io',
-        withCredentials: true,
-        auth: {
-          token: token,
-        },
-      });
+  // useEffect(() => {
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     const socket = io(socketUrl, {
+  //       path: '/api/socket.io',
+  //       withCredentials: true,
+  //       auth: {
+  //         token: token,
+  //       },
+  //     });
 
-      socket.on('connect', () => {
-        console.log('Connected to server');
-      });
+  //     socket.on('connect', () => {
+  //       console.log('Connected to server');
+  //     });
 
-      socket.on('log', (message) => {
-        console.log(message)
-        setLogs((prevLogs) => [...prevLogs, message.data]);
-      });
+  //     socket.on('log', (message) => {
+  //       console.log(message)
+  //       setLogs((prevLogs) => [...prevLogs, message.data]);
+  //     });
 
-      socket.on('connect_error', (err) => {
-        console.log('Connection error:', err);
-      });
+  //     socket.on('connect_error', (err) => {
+  //       console.log('Connection error:', err);
+  //     });
 
-      return () => {
-        socket.off('log');
-        socket.off('connect_error');
-        socket.disconnect();
-      };
-    } catch (error) {
-      console.log(error);
-      toast.error("Not connected to websocket")
-      return;
-    }
-  }, []);
+  //     return () => {
+  //       socket.off('log');
+  //       socket.off('connect_error');
+  //       socket.disconnect();
+  //     };
+  //   } catch (error) {
+  //     console.log(error);
+  //     toast.error("Not connected to websocket")
+  //     return;
+  //   }
+  // }, []);
 
   const startProcess = async () => {
     try {
@@ -241,7 +241,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
       <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
       <div className="container mx-auto p-4">
         <audio ref={audioRef} src="/notification.mp3" />
-  
+
         <div className="mt-4 border rounded flex flex-row justify-between">
           <div className='p-2'>
             <label htmlFor="timezone" className="block text-lg font-bold mb-2">Select Timezone:</label>
@@ -275,7 +275,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
             {audioEnabled ? 'Disable Audio Notifications' : 'Enable Audio Notifications'}
           </button>
         </div>
-  
+
         {/* ——————— Hooks list ——————— */}
         <div className="mt-4 p-2 border rounded">
           <h2 className="text-xl font-bold">Webhooks list</h2>
@@ -292,7 +292,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
               ))}
             </div>)}
         </div>
-  
+
         {/* ——————— Received hooks ——————— */}
         <div className="mt-4 p-2 border rounded">
           <h2 className="text-xl font-bold">Received Webhooks</h2>
@@ -305,13 +305,13 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
                 ))}
               </ul>)}
         </div>
-  
+
         {/* ——————— Blocked Hooks ——————— */}
         <div className="mt-4 p-2 border rounded">
           <h2 className="text-xl font-bold">Blocked Hooks</h2>
           <p>Total Blocked Hooks: {settings.blocked_hooks}</p>
         </div>
-  
+
         {/* ——————— Parsing process ——————— */}
         <div className='mt-4'>
           <button onClick={startProcess} disabled={isRunning} className={"bg-green-500 text-white px-4 py-2 rounded" + (isRunning ? " opacity-25" : "")}>
@@ -322,14 +322,14 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
           </button>
           <div className="mt-4 p-4 border rounded">
             <h2 className="text-xl font-bold">Logs</h2>
-            <div className="h-44 overflow-y-scroll bg-gray-100 p-2">
+            <div className="h-11 overflow-y-scroll bg-gray-100 p-2">
               {logs.map((log, index) => (
                 <div key={index}>{log}</div>
               ))}
             </div>
           </div>
         </div>
-  
+
         {/* ——————— Pumps list ——————— */}
         <div className="flex flex-col md:flex-row gap-3 justify-between">
           <div className="mt-4 p-2 border rounded w-full">
@@ -357,7 +357,7 @@ function Dashboard({ isAuthenticated, setIsAuthenticated }) {
               </tbody>
             </table>
           </div>
-  
+
           {/* ——————— Dumps list ——————— */}
           <div className="mt-4 p-2 border rounded w-full">
             <h2 className="text-xl font-bold border-b">Last <span className="text-red-600">DUMP</span>s</h2>
