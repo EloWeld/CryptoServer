@@ -7,16 +7,30 @@ import { CustomNumberInput, CustomFloatInput } from '../components/CustomNumberI
 function Settings({ isAuthenticated, setIsAuthenticated }) {
   const [settings, setSettings] = useState({
     domain: '',
-    pump_webhook: '',
-    pump_data: '',
-    enable_pump: false,
-    dump_webhook: '',
-    dump_data: '',
-    enable_dump: false,
+
+    rapid_delay: 0,
+    smooth_delay: 0,
+    check_per_minutes_rapid: 0,
+    check_per_minutes_smooth: 0,
+
+    raid_pump_webhook: '',
+    raid_pump_data: '',
+    raid_enable_pump: false,
+
+    raid_dump_webhook: '',
+    raid_dump_data: '',
+    raid_enable_dump: false,
+
+    smooth_pump_webhook: '',
+    smooth_pump_data: '',
+    smooth_enable_pump: false,
+
+    smooth_dump_webhook: '',
+    smooth_dump_data: '',
+    smooth_enable_dump: false,
+
     max_save_minutes: 0,
-    check_per_minutes: 0,
     price_change_percent: '',
-    check_per_minutes_mode_2: 0,
     price_change_trigger_percent: '',
     oi_change_percent: '',
     cvd_change_percent: '',
@@ -75,131 +89,176 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
             <label htmlFor="tg_id" className="block text-sm font-medium text-gray-700">Telegram ID</label>
             <CustomNumberInput type="text" id="tg_id" name="tg_id" value={settings.tg_id} onChange={handleChange} required />
           </div>
-          <div className="flex flex-row justify-between gap-5">
-            <div className="col w-full">
-              <div>
-                <label htmlFor="pump_webhook" className="block text-sm font-medium text-gray-700">Pump Webhook</label>
-                <input
-                  type="text" id="pump_webhook" name="pump_webhook" value={settings.pump_webhook} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
-                />
+          <div className="border-2 border-gray-300 shadow-lg rounded p-4">
+            <h1 className="text-xl font-bold mb-2 text-center">Requests settings</h1>
+            <div className="flex flex-row justify-between gap-5">
+              <div className="w-full">
+                <h2 className="border-b-2 border-gray-300 text-lg font-bold mb-2">Быстрый рост</h2>
+
+                <div>
+                  <label htmlFor="raid_pump_webhook" className="block text-sm font-medium text-gray-700">Pump Webhook</label>
+                  <input
+                    type="text" id="raid_pump_webhook" name="raid_pump_webhook" value={settings.raid_pump_webhook} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="raid_pump_data" className="block text-sm font-medium text-gray-700">Pump Data</label>
+                  <textarea
+                    id="raid_pump_data" name="raid_pump_data" rows="4" value={settings.raid_pump_data} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                  />
+                </div>
+                <div className="flex items-center mb-2">
+                  <input
+                    id="raid_enable_pump" name="raid_enable_pump" type="checkbox" checked={settings.raid_enable_pump} onChange={handleChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="raid_enable_pump" className="ml-2 text-sm font-medium text-gray-900">Enable Pump</label>
+                </div>
+                <div>
+                  <label htmlFor="raid_dump_webhook" className="block text-sm font-medium text-gray-700">Dump Webhook</label>
+                  <input
+                    type="text" id="raid_dump_webhook" name="raid_dump_webhook" value={settings.raid_dump_webhook} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="raid_dump_data" className="block text-sm font-medium text-gray-700">Dump Data</label>
+                  <textarea
+                    id="raid_dump_data" name="raid_dump_data" rows="4" value={settings.raid_dump_data} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                  />
+                </div>
+                <div className="flex items-center mb-2">
+                  <input
+                    id="raid_enable_dump" name="raid_enable_dump" type="checkbox" checked={settings.raid_enable_dump} onChange={handleChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="raid_enable_dump" className="ml-2 text-sm font-medium text-gray-900">Enable Dump</label>
+                </div>
               </div>
-              <div>
-                <label htmlFor="pump_data" className="block text-sm font-medium text-gray-700">Pump Data</label>
-                <textarea
-                  id="pump_data" name="pump_data" rows="4" value={settings.pump_data} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
-                />
-              </div>
-              <div className="flex items-center mb-2">
-                <input
-                  id="enable_pump" name="enable_pump" type="checkbox" checked={settings.enable_pump} onChange={handleChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="enable_pump" className="ml-2 text-sm font-medium text-gray-900">Enable pump</label>
-              </div>
-            </div>
-            <div className="col w-full">
-              <div>
-                <label htmlFor="dump_webhook" className="block text-sm font-medium text-gray-700">Dump Webhook</label>
-                <input
-                  type="text" id="dump_webhook" name="dump_webhook" value={settings.dump_webhook} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
-                />
-              </div>
-              <div>
-                <label htmlFor="dump_data" className="block text-sm font-medium text-gray-700">Dump Data</label>
-                <textarea
-                  id="dump_data" name="dump_data" rows="4" value={settings.dump_data} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
-                />
-              </div>
-              <div className="flex items-center mb-2">
-                <input
-                  id="enable_dump" name="enable_dump" type="checkbox" checked={settings.enable_dump} onChange={handleChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="enable_dump" className="ml-2 text-sm font-medium text-gray-900">Enable dump</label>
+              <div className="w-full">
+                <h2 className="border-b-2 border-gray-300 text-lg font-bold mb-2">Плавный рост</h2>
+                <div>
+                  <label htmlFor="smooth_pump_webhook" className="block text-sm font-medium text-gray-700">Pump Webhook</label>
+                  <input
+                    type="text" id="smooth_pump_webhook" name="smooth_pump_webhook" value={settings.smooth_pump_webhook} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="smooth_pump_data" className="block text-sm font-medium text-gray-700">Pump Data</label>
+                  <textarea
+                    id="smooth_pump_data" name="smooth_pump_data" rows="4" value={settings.smooth_pump_data} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                  />
+                </div>
+                <div className="flex items-center mb-2">
+                  <input
+                    id="smooth_enable_pump" name="smooth_enable_pump" type="checkbox" checked={settings.smooth_enable_pump} onChange={handleChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="smooth_enable_pump" className="ml-2 text-sm font-medium text-gray-900">Enable Pump</label>
+                </div>
+                <div>
+                  <label htmlFor="smooth_dump_webhook" className="block text-sm font-medium text-gray-700">Dump Webhook</label>
+                  <input
+                    type="text" id="smooth_dump_webhook" name="smooth_dump_webhook" value={settings.smooth_dump_webhook} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="smooth_dump_data" className="block text-sm font-medium text-gray-700">Dump Data</label>
+                  <textarea
+                    id="smooth_dump_data" name="smooth_dump_data" rows="4" value={settings.smooth_dump_data} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                  />
+                </div>
+                <div className="flex items-center mb-2">
+                  <input
+                    id="smooth_enable_dump" name="smooth_enable_dump" type="checkbox" checked={settings.smooth_enable_dump} onChange={handleChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="smooth_enable_dump" className="ml-2 text-sm font-medium text-gray-900">Enable Dump</label>
+                </div>
               </div>
             </div>
           </div>
-          <div className="flex flex-row justify-between gap-3">
-            <label htmlFor="max_save_minutes" className="block text-sm font-medium text-gray-700">Maximum save minutes</label>
-            <CustomNumberInput type="number"
-              id="max_save_minutes"
-              name="max_save_minutes"
-              value={settings.max_save_minutes}
-              onChange={handleChange}
-              required />
-          </div>
-          <div className="flex flex-row justify-between gap-3">
-            <div className="w-2/4">
-              <label className="block text-lg font-medium text-gray-700">Mode Simple</label>
-              <label htmlFor="check_per_minutes" className="block text-sm font-medium text-gray-700">Check per minutes</label>
+          <div className="border-2 border-gray-300 shadow-lg rounded p-4">
+            <h1 className="text-xl font-bold mb-2 text-center">Trade settings</h1>
+            <div className="flex flex-row justify-between gap-3">
+              <label htmlFor="max_save_minutes" className="block text-sm font-medium text-gray-700">Maximum save minutes</label>
               <CustomNumberInput type="number"
-                id="check_per_minutes"
-                name="check_per_minutes"
-                value={settings.check_per_minutes}
-                onChange={handleChange}
-                required />
-              <label htmlFor="price_change_percent" className="block text-sm font-medium text-gray-700">Price change percent</label>
-              <CustomFloatInput
-                id="price_change_percent"
-                name="price_change_percent"
-                value={settings.price_change_percent}
+                id="max_save_minutes"
+                name="max_save_minutes"
+                value={settings.max_save_minutes}
                 onChange={handleChange}
                 required />
             </div>
-            <div className="w-2/4">
-              <label className="block text-lg font-medium text-gray-700">Mode Hard</label>
-              <label htmlFor="check_per_minutes_mode_2" className="block text-sm font-medium text-gray-700">Check per minutes hard</label>
-              <input
-                type="number"
-                id="check_per_minutes_mode_2"
-                name="check_per_minutes_mode_2"
-                value={settings.check_per_minutes_mode_2}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
-              />
-              <label htmlFor="price_change_trigger_percent" className="block text-sm font-medium text-gray-700">Price change trigger percent</label>
-              <input
-                type="text"
-                id="price_change_trigger_percent"
-                name="price_change_trigger_percent"
-                pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
-                value={settings.price_change_trigger_percent}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
-              />
-              <label htmlFor="oi_change_percent" className="block text-sm font-medium text-gray-700">OI change percent</label>
-              <input
-                type="text"
-                id="oi_change_percent"
-                name="oi_change_percent"
-                pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
-                value={settings.oi_change_percent}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
-              />
-              <label htmlFor="cvd_change_percent" className="block text-sm font-medium text-gray-700">CVD change percent</label>
-              <input
-                type="text"
-                id="cvd_change_percent"
-                name="cvd_change_percent"
-                pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
-                value={settings.cvd_change_percent}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
-              />
-              <label htmlFor="v_volumes_change_percent" className="block text-sm font-medium text-gray-700">Vertical Volumes change percent</label>
-              <input
-                type="text"
-                id="v_volumes_change_percent"
-                name="v_volumes_change_percent"
-                pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
-                value={settings.v_volumes_change_percent}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
-              />
+            <div className="flex flex-row justify-between gap-3">
+              <div className="w-2/4">
+                <h2 className="border-b-2 border-gray-300 text-lg font-bold mb-2">Быстрый рост</h2>
+                <label htmlFor="check_per_minutes_rapid" className="block text-sm font-medium text-gray-700">Check per minutes</label>
+                <CustomNumberInput type="number"
+                  id="check_per_minutes_rapid"
+                  name="check_per_minutes_rapid"
+                  value={settings.check_per_minutes_rapid}
+                  onChange={handleChange}
+                  required />
+                <label htmlFor="price_change_percent" className="block text-sm font-medium text-gray-700">Price change percent</label>
+                <CustomFloatInput
+                  id="price_change_percent"
+                  name="price_change_percent"
+                  value={settings.price_change_percent}
+                  onChange={handleChange}
+                  required />
+              </div>
+              <div className="w-2/4">
+                <h2 className="border-b-2 border-gray-300 text-lg font-bold mb-2">Плавный рост</h2>
+                <label htmlFor="check_per_minutes_smooth" className="block text-sm font-medium text-gray-700">Check per minutes</label>
+                <input
+                  type="number"
+                  id="check_per_minutes_smooth"
+                  name="check_per_minutes_smooth"
+                  value={settings.check_per_minutes_smooth}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
+                />
+                <label htmlFor="price_change_trigger_percent" className="block text-sm font-medium text-gray-700">Price change trigger percent</label>
+                <input
+                  type="text"
+                  id="price_change_trigger_percent"
+                  name="price_change_trigger_percent"
+                  pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
+                  value={settings.price_change_trigger_percent}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
+                />
+                <label htmlFor="oi_change_percent" className="block text-sm font-medium text-gray-700">OI change percent</label>
+                <input
+                  type="text"
+                  id="oi_change_percent"
+                  name="oi_change_percent"
+                  pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
+                  value={settings.oi_change_percent}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
+                />
+                <label htmlFor="cvd_change_percent" className="block text-sm font-medium text-gray-700">CVD change percent</label>
+                <input
+                  type="text"
+                  id="cvd_change_percent"
+                  name="cvd_change_percent"
+                  pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
+                  value={settings.cvd_change_percent}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
+                />
+                <label htmlFor="v_volumes_change_percent" className="block text-sm font-medium text-gray-700">Vertical Volumes change percent</label>
+                <input
+                  type="text"
+                  id="v_volumes_change_percent"
+                  name="v_volumes_change_percent"
+                  pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
+                  value={settings.v_volumes_change_percent}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
+                />
+              </div>
             </div>
           </div>
           <div>

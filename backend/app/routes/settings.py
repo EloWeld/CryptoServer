@@ -4,6 +4,7 @@ from app.models import Settings, db
 
 settings_bp = Blueprint('settings', __name__)
 
+
 @settings_bp.route('/api/webhook/<webhook_id>', methods=['DELETE', 'GET'])
 @login_required
 def manage_webhook(webhook_id):
@@ -17,14 +18,15 @@ def manage_webhook(webhook_id):
             updated_webhooks = settings.webhooks.copy()
             updated_webhooks = [x for x in updated_webhooks if x.get('webhook', None) != webhook_id]
             settings.webhooks = updated_webhooks
-            
+
             db.session.commit()
             return jsonify({"result": "ok", "settings": settings}), 200
         except Exception as e:
             db.session.rollback()
             return jsonify({"result": "error", "message": str(e)}), 500
-        
+
     return jsonify({"result": "not_allowed"}), 405
+
 
 @settings_bp.route('/api/webhook', methods=['POST', 'GET'])
 @login_required
@@ -46,7 +48,7 @@ def manage_webhooks():
             updated_webhooks = settings.webhooks.copy()
             updated_webhooks.append(data)
             settings.webhooks = updated_webhooks
-            
+
             db.session.commit()
             return jsonify({"result": "ok"}), 200
         except Exception as e:
@@ -54,7 +56,7 @@ def manage_webhooks():
             return jsonify({"result": "error", "message": str(e)}), 500
 
     return jsonify({"result": "not_allowed"}), 405
-        
+
 
 @settings_bp.route('/api/settings', methods=['GET', 'POST'])
 @login_required
@@ -69,14 +71,26 @@ def manage_settings():
         settings.received_hooks = data.get('received_hooks', [])
         settings.blocked_hooks = data.get('blocked_hooks', 0)
         settings.domain = data.get('domain', "https://www.davinchi-crypto.ru/api")
-        settings.pump_webhook = data.get('pump_webhook', "https://hook.finandy.com/?")
-        settings.dump_webhook = data.get('dump_webhook', "https://hook.finandy.com/?")
-        settings.pump_data = data.get('pump_data', "{}")
-        settings.dump_data = data.get('dump_data', "{}")
-        settings.enable_pump = data.get('enable_pump', True)
-        settings.enable_dump = data.get('enable_dump', True)
-        settings.check_per_minutes = data.get('check_per_minutes', 1)
-        settings.check_per_minutes_mode_2 = data.get('check_per_minutes_mode_2', 3)
+
+        settings.rapid_pump_webhook = data.get('rapid_pump_webhook', "https://hook.finandy.com/?")
+        settings.rapid_dump_webhook = data.get('rapid_dump_webhook', "https://hook.finandy.com/?")
+        settings.rapid_pump_data = data.get('rapid_pump_data', "{}")
+        settings.rapid_dump_data = data.get('rapid_dump_data', "{}")
+        settings.rapid_enable_pump = data.get('rapid_enable_pump', True)
+        settings.rapid_enable_dump = data.get('rapid_enable_dump', True)
+
+        settings.smooth_pump_webhook = data.get('smooth_pump_webhook', "https://hook.finandy.com/?")
+        settings.smooth_dump_webhook = data.get('smooth_dump_webhook', "https://hook.finandy.com/?")
+        settings.smooth_pump_data = data.get('smooth_pump_data', "{}")
+        settings.smooth_dump_data = data.get('smooth_dump_data', "{}")
+        settings.smooth_enable_pump = data.get('smooth_enable_pump', True)
+        settings.smooth_enable_dump = data.get('smooth_enable_dump', True)
+
+        settings.check_per_minutes_rapid = data.get('check_per_minutes_rapid', 1)
+        settings.check_per_minutes_smooth = data.get('check_per_minutes_smooth', 3)
+        settings.rapid_delay = data.get('rapid_delay', 3)
+        settings.smooth_delay = data.get('smooth_delay', 3)
+
         settings.max_save_minutes = data.get('max_save_minutes', 15)
         settings.price_change_percent = data.get('price_change_percent', 2.0)
         settings.price_change_trigger_percent = data.get('price_change_trigger_percent', 4.0)
@@ -86,7 +100,7 @@ def manage_settings():
         settings.use_spot = data.get('use_spot', False)
         settings.use_wicks = data.get('use_wicks', False)
         settings.tg_id = data.get('tg_id', -1)
-        
+
         db.session.add(settings)
         db.session.commit()
         return jsonify({"message": "Settings updated"}), 200
@@ -102,17 +116,30 @@ def manage_settings():
             received_hooks=[],
             blocked_hooks=0,
             domain="https://www.davinchi-crypto.ru/api",
-            pump_webhook="https://hook.finandy.com/?",
-            dump_webhook="https://hook.finandy.com/?",
-            pump_data="{}",
-            dump_data="{}",
-            enable_pump=True,
-            enable_dump=True,
-            check_per_minutes=1,
-            check_per_minutes_mode_2=3,
-            max_save_minutes=15,
+
+            rapid_pump_webhook="https://hook.finandy.com/?",
+            rapid_dump_webhook="https://hook.finandy.com/?",
+            rapid_pump_data="{}",
+            rapid_dump_data="{}",
+            rapid_enable_pump=True,
+            rapid_enable_dump=True,
+
+            smooth_pump_webhook="https://hook.finandy.com/?",
+            smooth_dump_webhook="https://hook.finandy.com/?",
+            smooth_pump_data="{}",
+            smooth_dump_data="{}",
+            smooth_enable_pump=True,
+            smooth_enable_dump=True,
+
+            raid_delay=2,
+            smooth_delay=2,
+            check_per_minutes_rapid=1,
+            check_per_minutes_smooth=3,
+
             price_change_percent=2.0,
             price_change_trigger_percent=4.0,
+
+            max_save_minutes=15,
             oi_change_percent=4.0,
             cvd_change_percent=4.0,
             v_volumes_change_percent=4.0,

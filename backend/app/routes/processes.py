@@ -50,8 +50,13 @@ def start_price_saving_thread():
 
 
 def send_webhook(settings: Settings, symbol, data, minute, user_id):
-    url = settings.pump_webhook if data['type'] == 'pump' else settings.dump_webhook
-    data_template: str = settings.pump_data if data['type'] == 'pump' else settings.dump_data
+    if data['exchange'] == "rapid":
+        url = settings.rapid_pump_webhook if data['type'] == 'pump' else settings.rapid_dump_webhook
+        data_template: str = settings.rapid_pump_data if data['type'] == 'pump' else settings.rapid_dump_data
+    elif data['exchange'] == "smooth":
+        url = settings.smooth_pump_webhook if data['type'] == 'pump' else settings.smooth_dump_webhook
+        data_template: str = settings.smooth_pump_data if data['type'] == 'pump' else settings.smooth_dump_data
+
     data = data_template.replace('{{ticker}}', symbol)
     try:
         r = requests.post(url, headers={'Content-Type': "application/json"}, data=data)
@@ -70,7 +75,13 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
     nowd = datetime.datetime.now()
     now = (int(nowd.timestamp()) // 60) * 60
     for log_entry in change_log:
-        if log_entry.symbol == data["symbol"] and log_entry.type == data["type"] and datetime.datetime.now() - log_entry.created_at < datetime.timedelta(minutes=settings.check_per_minutes):
+        delay = 3
+        if data['exchange'] == "rapid":
+            delay = settings.rapid_delay
+        elif data['exchange'] == "smooth":
+            delay = settings.rapid_delay
+
+        if log_entry.symbol == data["symbol"] and log_entry.type == data["type"] and datetime.datetime.now() - log_entry.created_at < datetime.timedelta(minutes=delay):
             return  # Запись уже существует, не добавляем дубликат
 
     if data['type'] != "error":
@@ -115,10 +126,10 @@ def update_price(price_history: dict, settings: Settings, message: FuturesPrice,
 
     with lock:
         MAX_MINUTES = settings.max_save_minutes
-        N1 = settings.check_per_minutes
-        N2 = settings.check_per_minutes_mode_2
-        C1 = settings.price_change_percent
-        C2 = settings.price_change_trigger_percent
+        RAPID_CHECK_MINUTES = settings.check_per_minutes_rapid
+        SMOOTH_CHECK_MINUTES = settings.check_per_minutes_smooth
+        RAPID_PRICE_CHANGE = settings.price_change_percent
+        SMOOTH_PRICE_CHANGE = settings.price_change_trigger_percent
         COI = settings.oi_change_percent
         CCVD = settings.cvd_change_percent
         CVVC = settings.v_volumes_change_percent
@@ -147,7 +158,7 @@ def update_price(price_history: dict, settings: Settings, message: FuturesPrice,
         def log_and_journal(symbol, change_amount, change_type, mode, min_price, max_price, interval, current_price):
             loguru.logger.success(f"{symbol} price {change_type.upper()} by {change_amount:.2f}% over the last {interval} minutes; Datetime: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             s_data = {
-                "exchange": "binance" if mode == "price" else "binance_smooth",
+                "exchange": "rapid" if mode == "price" else "smooth",
                 "symbol": symbol,
                 "type": change_type,
                 "mode": mode,
@@ -164,36 +175,36 @@ def update_price(price_history: dict, settings: Settings, message: FuturesPrice,
                 loguru.logger.error(err_msg)
                 socketio.emit('log', {'data': err_msg}, room=username)
 
-        if len(price_history[symbol]) > N1:
-            change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(price_history[symbol], N1)
-            if change_amount_pump >= C1 and settings.enable_pump:
-                log_and_journal(symbol, change_amount_pump, "pump", "price", min_price, max_price, N1, price_history[symbol][-1][1])
-            if change_amount_dump >= C1 and settings.enable_dump:
-                log_and_journal(symbol, change_amount_dump, "dump", "price", min_price, max_price, N1, price_history[symbol][-1][1])
+        if len(price_history[symbol]) > RAPID_CHECK_MINUTES:
+            change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(price_history[symbol], RAPID_CHECK_MINUTES)
+            if change_amount_pump >= RAPID_PRICE_CHANGE and settings.rapid_enable_pump:
+                log_and_journal(symbol, change_amount_pump, "pump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[symbol][-1][1])
+            if change_amount_dump >= RAPID_PRICE_CHANGE and settings.rapid_enable_dump:
+                log_and_journal(symbol, change_amount_dump, "dump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[symbol][-1][1])
 
-        if len(price_history[symbol]) > N2:
+        if len(price_history[symbol]) > SMOOTH_CHECK_MINUTES:
             change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(
-                price_history[symbol], N2)
-            if change_amount_pump >= C2 and settings.enable_pump:
-                oi = sorted(get_oi_candles(symbol, max(2, N2 // 5)), key=lambda x: x['timestamp'])
+                price_history[symbol], SMOOTH_CHECK_MINUTES)
+            if change_amount_pump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_pump:
+                oi = sorted(get_oi_candles(symbol, max(2, SMOOTH_CHECK_MINUTES // 5)), key=lambda x: x['timestamp'])
                 oi_values = [float(x['sumOpenInterest']) for x in oi]
                 oi_change = (oi_values[-1] - oi_values[0]) / oi_values[0] * 100
                 if oi_change > COI:
-                    cvd_change = get_cvd_change(symbol, N2+1)
+                    cvd_change = get_cvd_change(symbol, SMOOTH_CHECK_MINUTES+1)
                     if cvd_change > CCVD:
-                        volumes_change = get_volumes_change(symbol, N2+1)
+                        volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)
                         if volumes_change > CVVC:
-                            log_and_journal(symbol, change_amount_pump, "pump", "smooth", min_price, max_price, N2, price_history[symbol][-1][1])
-            if change_amount_dump >= C2 and settings.enable_dump:
-                oi = sorted(get_oi_candles(symbol, max(2, N2 // 5)), key=lambda x: x['timestamp'])
+                            log_and_journal(symbol, change_amount_pump, "pump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[symbol][-1][1])
+            if change_amount_dump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_dump:
+                oi = sorted(get_oi_candles(symbol, max(2, SMOOTH_CHECK_MINUTES // 5)), key=lambda x: x['timestamp'])
                 oi_values = [float(x['sumOpenInterest']) for x in oi]
                 oi_change = (oi_values[-1] - oi_values[0]) / oi_values[0] * 100
                 if -oi_change > COI:
-                    cvd_change = get_cvd_change(symbol, N2+1)
+                    cvd_change = get_cvd_change(symbol, SMOOTH_CHECK_MINUTES+1)
                     if -cvd_change > CCVD:
-                        volumes_change = get_volumes_change(symbol, N2+1)
+                        volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)
                         if -volumes_change > CVVC:
-                            log_and_journal(symbol, change_amount_dump, "dump", "smooth", min_price, max_price, N2, price_history[symbol][-1][1])
+                            log_and_journal(symbol, change_amount_dump, "dump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[symbol][-1][1])
 
 
 def process_function(app: Flask, user_id):

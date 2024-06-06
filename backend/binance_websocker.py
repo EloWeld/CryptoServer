@@ -65,12 +65,12 @@ def add_journal(data):
         if ('created_at' not in log_entry) or ('symbol' not in log_entry):
             continue
         log_time = datetime.datetime.strptime(log_entry["created_at"], "%Y-%m-%d %H:%M:%S")
-        if log_entry["symbol"] == data["symbol"] and log_entry["type"] == data["type"] and datetime.datetime.now() - log_time < datetime.timedelta(minutes=settings['check_per_minutes']):
+        if log_entry["symbol"] == data["symbol"] and log_entry["type"] == data["type"] and datetime.datetime.now() - log_time < datetime.timedelta(minutes=settings['check_per_minutes_rapid']):
             return  # Запись уже существует, не добавляем дубликат
 
     # Добавление новой записи
     lines.append(json.dumps(data, ensure_ascii=False, default=str) + "\n")
-    
+
     # Оставляем только последние 2000 строк
     if len(lines) > max_lines:
         lines = lines[-max_lines:]
@@ -78,7 +78,7 @@ def add_journal(data):
     # Запись обновленного журнала
     with open(log_file, 'w', encoding='utf-8') as f:
         f.writelines(lines)
-        
+
     if data['type'] != "error":
         send_webhook(settings, data['symbol'], data, now)
 
@@ -98,7 +98,7 @@ def add_journal(data):
                  f"📣 Сигналов за сутки: {len([x for x in log_entries if datetime.datetime.strptime(x['created_at'], '%Y-%m-%d %H:%M:%S') > datetime.datetime(nowd.year, nowd.month, nowd.day)])}")
     else:
         spam_all(f"<b>⚠️ Странное поведение!</b>\n"
-                f"Данные: <code>{data}</code>")
+                 f"Данные: <code>{data}</code>")
 
 
 def update_price(message):
@@ -110,8 +110,8 @@ def update_price(message):
 
     with lock:
         MAX_MINUTES = settings['max_save_minutes']
-        N1 = settings['check_per_minutes']
-        N2 = settings['check_per_minutes_mode_2']
+        N1 = settings['check_per_minutes_rapid']
+        N2 = settings['check_per_minutes_smooth']
         C1 = settings['price_change_percent']
         C2 = settings.get('price_change_trigger_percent', 0)
         COI = settings.get('oi_change_percent', 0)
@@ -142,7 +142,7 @@ def update_price(message):
         def log_and_journal(symbol, change_amount, change_type, mode, min_price, max_price, interval, current_price):
             loguru.logger.success(f"{symbol} price {change_type.upper()} by {change_amount:.2f}% over the last {interval} minutes; Datetime: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             s_data = {
-                "exchange": "binance" if mode == "price" else "binance_smooth",
+                "exchange": "rapid" if mode == "price" else "smooth",
                 "symbol": symbol,
                 "type": change_type,
                 "mode": mode,
