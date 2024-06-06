@@ -13,13 +13,13 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
     check_per_minutes_rapid: 0,
     check_per_minutes_smooth: 0,
 
-    raid_pump_webhook: '',
-    raid_pump_data: '',
-    raid_enable_pump: false,
+    rapid_pump_webhook: '',
+    rapid_pump_data: '',
+    rapid_enable_pump: false,
 
-    raid_dump_webhook: '',
-    raid_dump_data: '',
-    raid_enable_dump: false,
+    rapid_dump_webhook: '',
+    rapid_dump_data: '',
+    rapid_enable_dump: false,
 
     smooth_pump_webhook: '',
     smooth_pump_data: '',
@@ -96,40 +96,40 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
                 <h2 className="border-b-2 border-gray-300 text-lg font-bold mb-2">Быстрый рост</h2>
 
                 <div>
-                  <label htmlFor="raid_pump_webhook" className="block text-sm font-medium text-gray-700">Pump Webhook</label>
+                  <label htmlFor="rapid_pump_webhook" className="block text-sm font-medium text-gray-700">Pump Webhook</label>
                   <input
-                    type="text" id="raid_pump_webhook" name="raid_pump_webhook" value={settings.raid_pump_webhook} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                    type="text" id="rapid_pump_webhook" name="rapid_pump_webhook" value={settings.rapid_pump_webhook} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
                   />
                 </div>
                 <div>
-                  <label htmlFor="raid_pump_data" className="block text-sm font-medium text-gray-700">Pump Data</label>
+                  <label htmlFor="rapid_pump_data" className="block text-sm font-medium text-gray-700">Pump Data</label>
                   <textarea
-                    id="raid_pump_data" name="raid_pump_data" rows="4" value={settings.raid_pump_data} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                    id="rapid_pump_data" name="rapid_pump_data" rows="4" value={settings.rapid_pump_data} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
                   />
                 </div>
                 <div className="flex items-center mb-2">
                   <input
-                    id="raid_enable_pump" name="raid_enable_pump" type="checkbox" checked={settings.raid_enable_pump} onChange={handleChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    id="rapid_enable_pump" name="rapid_enable_pump" type="checkbox" checked={settings.rapid_enable_pump} onChange={handleChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <label htmlFor="raid_enable_pump" className="ml-2 text-sm font-medium text-gray-900">Enable Pump</label>
+                  <label htmlFor="rapid_enable_pump" className="ml-2 text-sm font-medium text-gray-900">Enable Pump</label>
                 </div>
                 <div>
-                  <label htmlFor="raid_dump_webhook" className="block text-sm font-medium text-gray-700">Dump Webhook</label>
+                  <label htmlFor="rapid_dump_webhook" className="block text-sm font-medium text-gray-700">Dump Webhook</label>
                   <input
-                    type="text" id="raid_dump_webhook" name="raid_dump_webhook" value={settings.raid_dump_webhook} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                    type="text" id="rapid_dump_webhook" name="rapid_dump_webhook" value={settings.rapid_dump_webhook} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
                   />
                 </div>
                 <div>
-                  <label htmlFor="raid_dump_data" className="block text-sm font-medium text-gray-700">Dump Data</label>
+                  <label htmlFor="rapid_dump_data" className="block text-sm font-medium text-gray-700">Dump Data</label>
                   <textarea
-                    id="raid_dump_data" name="raid_dump_data" rows="4" value={settings.raid_dump_data} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
+                    id="rapid_dump_data" name="rapid_dump_data" rows="4" value={settings.rapid_dump_data} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
                   />
                 </div>
                 <div className="flex items-center mb-2">
                   <input
-                    id="raid_enable_dump" name="raid_enable_dump" type="checkbox" checked={settings.raid_enable_dump} onChange={handleChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    id="rapid_enable_dump" name="rapid_enable_dump" type="checkbox" checked={settings.rapid_enable_dump} onChange={handleChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <label htmlFor="raid_enable_dump" className="ml-2 text-sm font-medium text-gray-900">Enable Dump</label>
+                  <label htmlFor="rapid_enable_dump" className="ml-2 text-sm font-medium text-gray-900">Enable Dump</label>
                 </div>
               </div>
               <div className="w-full">
