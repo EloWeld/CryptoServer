@@ -69,6 +69,7 @@ def send_webhook(settings: Settings, symbol, data, minute, user_id):
 
 
 def add_journal(data: dict, settings: Settings, user_id: str | int):
+    loguru.logger.info(str(data) + f" {user_id}")
     # Чтение существующего журнала
     change_log: list[ChangesLog] = ChangesLog.query.filter(ChangesLog.user_id == user_id)
     # Проверка на дублирование
@@ -76,10 +77,11 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
     now = (int(nowd.timestamp()) // 60) * 60
     for log_entry in change_log:
         delay = 3
-        if data['exchange'] == "rapid":
-            delay = settings.rapid_delay
-        elif data['exchange'] == "smooth":
-            delay = settings.rapid_delay
+        if 'exchange' in data:
+            if data['exchange'] == "rapid":
+                delay = settings.rapid_delay
+            elif data['exchange'] == "smooth":
+                delay = settings.rapid_delay
 
         if log_entry.symbol == data["symbol"] and log_entry.type == data["type"] and datetime.datetime.now() - log_entry.created_at < datetime.timedelta(minutes=delay):
             return  # Запись уже существует, не добавляем дубликат
