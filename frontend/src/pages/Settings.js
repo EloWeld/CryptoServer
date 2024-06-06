@@ -187,14 +187,22 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
             <div className="flex flex-row justify-between gap-3">
               <div className="w-2/4">
                 <h2 className="border-b-2 border-gray-300 text-lg font-bold mb-2">Быстрый рост</h2>
-                <label htmlFor="check_per_minutes_rapid" className="block text-sm font-medium text-gray-700">Check per minutes</label>
+
+                <label htmlFor="rapid_delay" className="block text-sm font-medium text-gray-700">Интервал между повторными сигналами</label>
+                <CustomNumberInput type="number"
+                  id="rapid_delay"
+                  name="rapid_delay"
+                  value={settings.rapid_delay}
+                  onChange={handleChange}
+                  required />
+                <label htmlFor="check_per_minutes_rapid" className="block text-sm font-medium text-gray-700">Временной интервал, мин</label>
                 <CustomNumberInput type="number"
                   id="check_per_minutes_rapid"
                   name="check_per_minutes_rapid"
                   value={settings.check_per_minutes_rapid}
                   onChange={handleChange}
                   required />
-                <label htmlFor="price_change_percent" className="block text-sm font-medium text-gray-700">Price change percent</label>
+                <label htmlFor="price_change_percent" className="block text-sm font-medium text-gray-700">Процент изменения цены</label>
                 <CustomFloatInput
                   id="price_change_percent"
                   name="price_change_percent"
@@ -204,7 +212,15 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
               </div>
               <div className="w-2/4">
                 <h2 className="border-b-2 border-gray-300 text-lg font-bold mb-2">Плавный рост</h2>
-                <label htmlFor="check_per_minutes_smooth" className="block text-sm font-medium text-gray-700">Check per minutes</label>
+
+                <label htmlFor="smooth_delay" className="block text-sm font-medium text-gray-700">Интервал между повторными сигналами</label>
+                <CustomNumberInput type="number"
+                  id="smooth_delay"
+                  name="smooth_delay"
+                  value={settings.rapid_delay}
+                  onChange={handleChange}
+                  required />
+                <label htmlFor="check_per_minutes_smooth" className="block text-sm font-medium text-gray-700">Временной интервал, мин</label>
                 <input
                   type="number"
                   id="check_per_minutes_smooth"
@@ -214,7 +230,7 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
                 />
-                <label htmlFor="price_change_trigger_percent" className="block text-sm font-medium text-gray-700">Price change trigger percent</label>
+                <label htmlFor="price_change_trigger_percent" className="block text-sm font-medium text-gray-700">Процент изменения цены для проверки других параметров</label>
                 <input
                   type="text"
                   id="price_change_trigger_percent"
@@ -225,7 +241,7 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
                 />
-                <label htmlFor="oi_change_percent" className="block text-sm font-medium text-gray-700">OI change percent</label>
+                <label htmlFor="oi_change_percent" className="block text-sm font-medium text-gray-700">Процент изменения OI</label>
                 <input
                   type="text"
                   id="oi_change_percent"
@@ -236,7 +252,7 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
                 />
-                <label htmlFor="cvd_change_percent" className="block text-sm font-medium text-gray-700">CVD change percent</label>
+                <label htmlFor="cvd_change_percent" className="block text-sm font-medium text-gray-700">Процент изменения CVD</label>
                 <input
                   type="text"
                   id="cvd_change_percent"
@@ -247,7 +263,7 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
                 />
-                <label htmlFor="v_volumes_change_percent" className="block text-sm font-medium text-gray-700">Vertical Volumes change percent</label>
+                <label htmlFor="v_volumes_change_percent" className="block text-sm font-medium text-gray-700">Процент изменения объёмов</label>
                 <input
                   type="text"
                   id="v_volumes_change_percent"
@@ -262,7 +278,7 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Другие опции</label>
             <div className="flex items-center mb-2">
               <input
                 id="use_spot"
