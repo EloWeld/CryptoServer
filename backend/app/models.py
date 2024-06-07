@@ -12,6 +12,22 @@ class User(UserMixin, db.Model):
     timezone_offset = sa.Column(sa.Integer, default=0)
     settings = db.relationship('Settings', backref='user', uselist=False)
     changes_log = db.relationship('ChangesLog', backref='user', lazy=True)
+    parsings_process = db.relationship('ParsingProcess', backref='user', lazy=True)
+
+
+@dataclass
+class ParsingProcess(db.Model):
+    id: int
+    user_id: int
+    started_at: datetime.datetime
+    ended_at: datetime.datetime
+    status: str
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id'), nullable=False)
+    status = sa.Column(sa.String(150), nullable=False, default="active")
+    started_at = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.now)
+    ended_at = sa.Column(sa.DateTime, default=None, nullable=True)
 
 
 @dataclass

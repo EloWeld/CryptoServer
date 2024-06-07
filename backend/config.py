@@ -1,9 +1,11 @@
 
 
+from datetime import timedelta
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'your_secret_key')
@@ -16,4 +18,3 @@ class Config:
 
     COINGLASS_SECRET = os.environ.get("COINGLASS_SECRET", "")
     BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
-    SQLALCHEMY_TRACK_MODIFICATIONS = True

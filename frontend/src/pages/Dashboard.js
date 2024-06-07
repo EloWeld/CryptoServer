@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
+import axios from 'axiosConfig';
 import Navbar from '../components/Navbar';
 import { Listbox, ListboxOption, ListboxOptions, ListboxButton } from '@headlessui/react';
 import { io } from 'socket.io-client';

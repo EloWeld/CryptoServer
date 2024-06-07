@@ -5,6 +5,8 @@ import requests
 
 from config import Config
 
+global_cvd = {}
+
 
 def get_oi_candles(symbol: str, period):
     url = 'https://fapi.binance.com/futures/data/openInterestHist'
@@ -22,32 +24,82 @@ def get_oi_candles(symbol: str, period):
         return None
 
 
-def get_cvd_change(symbol, period):
-    # Запрос агрегированных сделок за последние три минуты
+def get_oi_candles_minutes(symbol: str, period_minutes):
+
+    limit = max(1, period_minutes // 5)
+
+    url = 'https://fapi.binance.com/futures/data/openInterestHist'
+    response = requests.get(url, params={
+        "symbol": symbol,
+        "period": "5m",
+        "limit": limit,
+    })
+
+    if response.status_code == 200:
+        prices = response.json()
+        filled_prices = []
+        for price in prices:
+            timestamp = price['timestamp']
+            oi_value = price['sumOpenInterest']
+            # Заполняем каждую минуту в 5-минутном интервале одинаковыми данными
+            for i in range(5):
+                filled_prices.append([
+                    (price['timestamp'] / 1000 // 60) + i,
+                    float(oi_value)
+                ])
+        return filled_prices[:period_minutes]  # Возвращаем только запрашиваемое количество минут
+    else:
+        loguru.logger.error(f"Error fetching data from Binance API , code: {response.status_code}, data: {response.text}")
+        return None
+
+
+def get_cvd(symbol, limit):
+    # Запрос данных ордербука (глубина рынка)
     trades_response = requests.get(f"https://fapi.binance.com/fapi/v1/trades", params={
         "symbol": symbol,
         "limit": 1000,
     })
     trades = trades_response.json()
+    cvd = []
 
-    # Фильтрация сделок за последние три минуты
-    past_trades = [trade for trade in trades if (period-1) * 60 <= (datetime.datetime.now() - datetime.datetime.fromtimestamp(trade['time']/1000)).seconds < period * 60]
-    current_trades = [trade for trade in trades if (datetime.datetime.now() - datetime.datetime.fromtimestamp(trade['time']/1000)).seconds <= 60]
-    # Расчёт CVD 3 минуты назад
-    past_cvd = sum(float(trade['qty']) if trade['isBuyerMaker'] else -float(trade['qty']) for trade in past_trades)
+    lm = 0
+    for trade in trades:
+        cm = trade['time'] // 1000 // 60
+        curr_cvd = float(trade['qty']) if trade['isBuyerMaker'] else -float(trade['qty'])
+        if lm != cm:
+            lm = cm
+            cvd.append([cm, curr_cvd])
+        else:
+            cvd[-1][-1] += curr_cvd
+    return cvd[-limit:]
 
-    # Расчёт текущего CVD
-    current_cvd = sum(float(trade['qty']) if trade['isBuyerMaker'] else -float(trade['qty']) for trade in current_trades)
 
-    return ((current_cvd - past_cvd) / past_cvd) * 100 if past_cvd != 0 else float('inf')
+def get_cvd_change(symbol, period):
+    cvd = get_cvd(symbol)
+
+    # Используем последние доступные данные, если недостаточно данных для заданного периода
+    if len(cvd) < period:
+        period = len(cvd)
+
+    # Определение CVD для текущего периода и периода минут назад
+    period_minutes_ago_cvd = cvd[-period][1]
+    current_minutes_cvd = cvd[-1][1]
+
+    return ((current_minutes_cvd - period_minutes_ago_cvd) / period_minutes_ago_cvd) * 100 if period_minutes_ago_cvd != 0 else 0
+
+
+def get_volumes(symbol, limit=100):
+    # Запрос данных ордербука (глубина рынка)
+    klines_response = requests.get(f"https://fapi.binance.com/fapi/v1/klines", params={"symbol": symbol, "interval": "1m", "limit": limit})
+    volumes = [[float(x[0] / 1000 // 60), float(x[5])] for x in sorted(klines_response.json(), key=lambda x: x[0])]
+    return volumes
 
 
 def get_volumes_change(symbol, limit=100):
     # Запрос данных ордербука (глубина рынка)
-    klines_response = requests.get(f"https://fapi.binance.com/fapi/v1/klines", params={"symbol": symbol, "interval": "1m", "limit": limit})
-    volumes = [x[5] for x in sorted(klines_response.json(), key=lambda x: x[0])]
-    past_vol = float(volumes[0])
-    current_vol = float(volumes[-1])
+    volumes = get_volumes(symbol, limit)
+    past_vol = float(volumes[0][1])
+    current_vol = float(volumes[-1][1])
 
     return ((current_vol - past_vol) / past_vol) * 100 if past_vol != 0 else float('inf')
 
@@ -74,7 +126,8 @@ def get_spot_prices():
     else:
         loguru.logger.error(f"Error fetching data from Binance API , code: {response.status_code}, data: {response.text}")
         return None
-    
+
+
 def send_tg_message(tg_id, message, kb=None):
     data = {
         "chat_id": tg_id,

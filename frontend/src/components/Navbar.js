@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useHistory } from 'react-router-dom';
-import axios from 'axios';
+import axios from 'axiosConfig';
 import { toast } from 'react-toastify';
 
 function Navbar({ isAuthenticated, setIsAuthenticated }) {
@@ -21,21 +21,26 @@ function Navbar({ isAuthenticated, setIsAuthenticated }) {
   return (
     <nav className="bg-indigo-50  shadow-md p-2">
       <div className="container mx-auto flex justify-between items-center">
-      
-          <Link to="/"><div className="text-2xl font-bold flex flex-row items-center gap-2"><img alt="logo" className="w-10 h-10" src="/images/logo.png"/><span>DaVinchi's</span></div></Link>
-        
+
+        <Link to="/"><div className="text-2xl font-bold flex flex-row items-center gap-2"><img alt="logo" className="w-10 h-10" src="/images/logo.png" /><span>DaVinchi's</span></div></Link>
+
         <div className="flex space-x-4">
           {isAuthenticated ? (
             <>
-            <Link to="/add-webhook" className="text-gray-800 hover:text-gray-600 p-2">
+              <Link to="/add-webhook" className="text-gray-800 hover:text-gray-600 p-2">
                 Add Webhook
               </Link>
+              <Link to="/charts" className="text-gray-800 hover:text-gray-600 p-2">
+                Charts
+              </Link>
+
               <Link to="/dashboard" className="text-gray-800 hover:text-gray-600 p-2">
                 Dashboard
               </Link>
               <Link to="/settings" className="text-gray-800 hover:text-gray-600 p-2">
                 Settings
               </Link>
+
               <button onClick={handleLogout} className="text-white bg-red-400 rounded hover:bg-red-700 transition duration-300 p-2">
                 Logout
               </button>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axios from 'axiosConfig';
 import Navbar from '../components/Navbar';
 import { toast } from 'react-toastify';
 import { CustomNumberInput, CustomFloatInput } from '../components/CustomNumberInput';
@@ -176,7 +176,7 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
           <div className="border-2 border-gray-300 shadow-lg rounded p-4">
             <h1 className="text-xl font-bold mb-2 text-center">Trade settings</h1>
             <div className="flex flex-row justify-between gap-3">
-              <label htmlFor="max_save_minutes" className="block text-sm font-medium text-gray-700">Maximum save minutes</label>
+              <label htmlFor="max_save_minutes" className="block text-sm font-medium text-gray-700">Сколько предыдущих минут рассматриваем</label>
               <CustomNumberInput type="number"
                 id="max_save_minutes"
                 name="max_save_minutes"

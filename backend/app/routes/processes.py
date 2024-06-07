@@ -10,7 +10,7 @@ import threading
 import time
 import loguru
 
-from app.models import ChangesLog, FuturesPrice, Settings, SpotPrice, User, db
+from app.models import ChangesLog, FuturesPrice, ParsingProcess, Settings, SpotPrice, User, db
 from app.utils import *
 from sqlalchemy.orm import scoped_session, sessionmaker
 
@@ -18,6 +18,7 @@ processes_bp = Blueprint('processes', __name__)
 
 process_threads = {}
 process_running = {}
+price_history = {}
 lock = threading.Lock()
 
 
@@ -47,6 +48,14 @@ def start_price_saving_thread():
     app = current_app._get_current_object()
     price_thread = threading.Thread(target=save_prices_to_db, args=(app,))
     price_thread.start()
+
+
+def start_user_processes():
+    app = current_app._get_current_object()
+    running_processes = db.session.query(ParsingProcess).filter(ParsingProcess.status == "active")
+    for running_process in running_processes:
+        price_thread = threading.Thread(target=process_function, args=(app, running_process.user_id))
+        price_thread.start()
 
 
 def send_webhook(settings: Settings, symbol, data, minute, user_id):
@@ -89,11 +98,11 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
     if data['type'] != "error":
         send_webhook(settings, data['symbol'], data, now, user_id)
 
-    if settings.tg_id > 1000:
+    if settings.tg_id and settings.tg_id > 1000:
         if data['type'] == "pump":
             send_tg_message(settings.tg_id, f"<b>🟢 Новый ПАМП!</b>\n"
                             f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
-                            f"🎯 Биржа/Мод: <code>{data['exchange']}</code>\n"
+                            f"🎯 Режим: <code>{data['exchange']}</code>\n"
                             f"📈 Изменение: <code>{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
                             f"🌐 Сайт: {settings.domain}\n"
                             f"📣 Сигналов за сутки: {len([x for x in change_log if x.created_at > datetime.datetime(nowd.year, nowd.month, nowd.day)])}")
@@ -101,7 +110,7 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
         elif data['type'] == "dump":
             send_tg_message(settings.tg_id, f"<b>🔴 Новый ДАМП!</b>\n"
                             f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
-                            f"🎯 Биржа/Мод: <code>{data['exchange']}</code>\n"
+                            f"🎯 Режим: <code>{data['exchange']}</code>\n"
                             f"📉 Изменение: <code>-{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
                             f"🌐 Сайт: {settings.domain}\n"
                             f"📣 Сигналов за сутки: {len([x for x in change_log if x.created_at > datetime.datetime(nowd.year, nowd.month, nowd.day)])}")
@@ -121,7 +130,8 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
     db.session.commit()
 
 
-def update_price(price_history: dict, settings: Settings, message: FuturesPrice, username: str | int):
+def update_price(settings: Settings, message: FuturesPrice, username: str | int):
+    global price_history
     symbol = message.symbol
     price = float(message.price)
     curr_minute = (int(time.time()) // 60)
@@ -136,14 +146,17 @@ def update_price(price_history: dict, settings: Settings, message: FuturesPrice,
         CCVD = settings.cvd_change_percent
         CVVC = settings.v_volumes_change_percent
 
-        if symbol not in price_history:
-            price_history[symbol] = [(curr_minute, price)]
+        if settings.user_id not in price_history:
+            price_history[settings.user_id] = {}
+
+        if symbol not in price_history[settings.user_id]:
+            price_history[settings.user_id][symbol] = [(curr_minute, price)]
         else:
-            if price_history[symbol][-1][0] != curr_minute:
-                price_history[symbol].append((curr_minute, price))
-                if len(price_history[symbol]) > MAX_MINUTES:
-                    price_history[symbol].pop(0)
-            price_history[symbol][-1] = (curr_minute, price)
+            if price_history[settings.user_id][symbol][-1][0] != curr_minute:
+                price_history[settings.user_id][symbol].append((curr_minute, price))
+                if len(price_history[settings.user_id][symbol]) > MAX_MINUTES:
+                    price_history[settings.user_id][symbol].pop(0)
+            price_history[settings.user_id][symbol][-1] = (curr_minute, price)
 
         def calculate_changes(prices, interval):
             old_price = prices[-(interval+1)][1]
@@ -177,16 +190,16 @@ def update_price(price_history: dict, settings: Settings, message: FuturesPrice,
                 loguru.logger.error(err_msg)
                 socketio.emit('log', {'data': err_msg}, room=username)
 
-        if len(price_history[symbol]) > RAPID_CHECK_MINUTES:
-            change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(price_history[symbol], RAPID_CHECK_MINUTES)
+        if len(price_history[settings.user_id][symbol]) > RAPID_CHECK_MINUTES:
+            change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(price_history[settings.user_id][symbol], RAPID_CHECK_MINUTES)
             if change_amount_pump >= RAPID_PRICE_CHANGE and settings.rapid_enable_pump:
-                log_and_journal(symbol, change_amount_pump, "pump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[symbol][-1][1])
+                log_and_journal(symbol, change_amount_pump, "pump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
             if change_amount_dump >= RAPID_PRICE_CHANGE and settings.rapid_enable_dump:
-                log_and_journal(symbol, change_amount_dump, "dump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[symbol][-1][1])
+                log_and_journal(symbol, change_amount_dump, "dump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
 
-        if len(price_history[symbol]) > SMOOTH_CHECK_MINUTES:
+        if len(price_history[settings.user_id][symbol]) > SMOOTH_CHECK_MINUTES:
             change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(
-                price_history[symbol], SMOOTH_CHECK_MINUTES)
+                price_history[settings.user_id][symbol], SMOOTH_CHECK_MINUTES)
             if change_amount_pump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_pump:
                 oi = sorted(get_oi_candles(symbol, max(2, SMOOTH_CHECK_MINUTES // 5)), key=lambda x: x['timestamp'])
                 oi_values = [float(x['sumOpenInterest']) for x in oi]
@@ -196,7 +209,7 @@ def update_price(price_history: dict, settings: Settings, message: FuturesPrice,
                     if cvd_change > CCVD:
                         volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)
                         if volumes_change > CVVC:
-                            log_and_journal(symbol, change_amount_pump, "pump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[symbol][-1][1])
+                            log_and_journal(symbol, change_amount_pump, "pump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
             if change_amount_dump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_dump:
                 oi = sorted(get_oi_candles(symbol, max(2, SMOOTH_CHECK_MINUTES // 5)), key=lambda x: x['timestamp'])
                 oi_values = [float(x['sumOpenInterest']) for x in oi]
@@ -206,7 +219,7 @@ def update_price(price_history: dict, settings: Settings, message: FuturesPrice,
                     if -cvd_change > CCVD:
                         volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)
                         if -volumes_change > CVVC:
-                            log_and_journal(symbol, change_amount_dump, "dump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[symbol][-1][1])
+                            log_and_journal(symbol, change_amount_dump, "dump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
 
 
 def process_function(app: Flask, user_id):
@@ -216,11 +229,12 @@ def process_function(app: Flask, user_id):
         session = Session()
 
         try:
-            price_history = {}
             user: User = session.query(User).get(user_id)
             loguru.logger.info(f"Process started for user {user_id} {user.username}")
             socketio.emit('log', {'data': f'Process started for user {user_id}.'}, room=user_id)
-            while process_running.get(user_id):
+            process = session.query(ParsingProcess).filter(ParsingProcess.user_id == user.id and ParsingProcess.status == "active").first()
+            while process is not None:
+                process = session.query(ParsingProcess).filter(ParsingProcess.user_id == user.id and ParsingProcess.status == "active").first()
                 us: Settings = session.query(Settings).filter(Settings.user_id == user.id).first()
                 if us.use_spot:
                     prices = session.query(SpotPrice).all()
@@ -229,7 +243,7 @@ def process_function(app: Flask, user_id):
                 prices_copy = deepcopy(prices)  # Создание копии объекта
                 for price in prices_copy:
                     try:
-                        update_price(price_history, us, price, user_id)
+                        update_price(us, price, user_id)
                     except Exception as e:
                         err_msg = f"Error in cycle {e} {traceback.format_exc()}"
                         loguru.logger.error(err_msg)
@@ -248,33 +262,46 @@ def process_function(app: Flask, user_id):
 @processes_bp.route('/api/start_process', methods=['POST'])
 @login_required
 def start_process():
-    username = current_user.id
-    if not process_running.get(username):
-        process_running[username] = True
+    user_id = current_user.id
+    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id and ParsingProcess.status == "active").first()
+    if running_process:
+        return jsonify({'status': 'Process already running'})
+
+    if running_process is None:
+        db.session.add(ParsingProcess(user_id=user_id, status="active"))
+        db.session.commit()
         app = current_app._get_current_object()  # Wattafock? Works! Magick!
-        process_thread = threading.Thread(target=process_function, args=(app, username,))
-        process_threads[username] = process_thread
+        process_thread = threading.Thread(target=process_function, args=(app, user_id,))
+        process_threads[user_id] = process_thread
         process_thread.start()
         return jsonify({'status': 'Process started'})
-    return jsonify({'status': 'Process already running'})
 
 
 @processes_bp.route('/api/get_process_status', methods=['GET'])
 @login_required
 def get_process_status():
-    username = current_user.id
-    return jsonify({"is_running": process_running.get(username, None)}), 200
+    user_id = current_user.id
+    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id and ParsingProcess.status == "active").first()
+    return jsonify({"is_running": running_process is not None}), 200
 
 
 @processes_bp.route('/api/stop_process', methods=['POST'])
 @login_required
 def stop_process():
-    username = current_user.id
-    process_running[username] = False
-    if username in process_threads:
-        process_threads[username].join()
+    user_id = current_user.id
+    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id and ParsingProcess.status == "active").first()
+    if running_process is None:
+        return jsonify({"status": "Process is not running now"})
+
+    running_process.status = "finished"
+    running_process.ended_at = datetime.datetime.now()
+
+    db.session.commit()
+
+    if user_id in process_threads:
+        process_threads[user_id].join()
         try:
-            del process_threads[username]
+            del process_threads[user_id]
         except Exception as e:
             loguru.logger.error(str(e))
     return jsonify({'status': 'Process stopped'})

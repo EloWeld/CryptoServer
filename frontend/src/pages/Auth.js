@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import axios from 'axios';
+import axios from 'axiosConfig';
+import instance from 'axiosConfig';
 
 function Auth({ setIsAuthenticated }) {
   const [username, setUsername] = useState('');
@@ -12,7 +13,7 @@ function Auth({ setIsAuthenticated }) {
     e.preventDefault();
     setError('');
     try {
-      const response = await axios.post('/api/login', { username, password });
+      const response = await instance.post('/api/login', { username, password });
       if (response.status === 200) {
         const { token } = response.data;
         localStorage.setItem('token', token);
@@ -20,8 +21,8 @@ function Auth({ setIsAuthenticated }) {
         history.push('/dashboard');
       }
     } catch (error) {
-      setError('Invalid credentials');
-      console.error("Invalid credentials");
+      setError(`Invalid credentials ${error}`);
+      console.log(error);
     }
   };
 
@@ -32,26 +33,26 @@ function Auth({ setIsAuthenticated }) {
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <div className="mb-4">
           <label className="block mb-1 font-semibold">Username</label>
-          <input 
-            type="text" 
-            value={username} 
-            onChange={(e) => setUsername(e.target.value)} 
-            className="w-full p-2 border rounded" 
-            required 
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
           />
         </div>
         <div className="mb-4">
           <label className="block mb-1 font-semibold">Password</label>
-          <input 
-            type="password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            className="w-full p-2 border rounded" 
-            required 
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
           />
         </div>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-700 transition duration-300"
         >
           Login

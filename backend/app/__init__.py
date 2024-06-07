@@ -30,7 +30,7 @@ def create_app():
     socketio.init_app(app, cors_allowed_origins="*", manage_session=True, path='/api/socket.io')
 
     # Enable CORS
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
     from app.routes.auth import auth_bp
     from app.routes.dashboard import dashboard_bp
@@ -38,6 +38,7 @@ def create_app():
     from app.routes.user import user_bp
     from app.routes.processes import processes_bp
     from app.routes.hooks import hooks_bp
+    from app.routes.charts import charts_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -45,9 +46,11 @@ def create_app():
     app.register_blueprint(user_bp)
     app.register_blueprint(processes_bp)
     app.register_blueprint(hooks_bp)
-    from app.routes.processes import start_price_saving_thread
+    app.register_blueprint(charts_bp)
+    from app.routes.processes import start_price_saving_thread, start_user_processes
 
     with app.app_context():
         start_price_saving_thread()
+        start_user_processes()
 
     return app
