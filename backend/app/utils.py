@@ -45,7 +45,7 @@ def get_oi_candles_minutes(symbol: str, period_minutes):
             oi_value = price['sumOpenInterest']
             # Заполняем каждую минуту в 5-минутном интервале одинаковыми данными
             for i in range(5):
-                if (price['timestamp'] / 1000 // 60) + i + 1 > c_time:
+                if (price['timestamp'] / 1000 // 60) + i > c_time:
                     continue
                 filled_prices.append([
                     (price['timestamp'] / 1000 // 60) + i,
@@ -58,25 +58,45 @@ def get_oi_candles_minutes(symbol: str, period_minutes):
 
 
 def get_cvd(symbol, limit):
-    # Запрос данных ордербука (глубина рынка)
-    trades_response = requests.get(f"https://fapi.binance.com/fapi/v1/aggTrades", params={
-        "symbol": symbol,
-        "limit": 1000,
-        "startTime": int((datetime.datetime.now() - datetime.timedelta(minutes=limit)).timestamp() * 1000)
-    })
-    trades = trades_response.json()
+    end_time = int(datetime.datetime.now().timestamp() * 1000)
+    start_time = end_time - limit * 60 * 1000  # Начальное время для первого запроса
     cvd = []
 
-    lm = 0
-    for trade in trades:
-        cm = trade['T'] // 1000 // 60
-        curr_cvd = float(trade['q']) if trade['m'] else -float(trade['q'])
-        if lm != cm:
-            lm = cm
-            cvd.append([cm, curr_cvd])
-        else:
-            cvd[-1][-1] += curr_cvd
-    return cvd[-limit:]
+    while len(cvd) < limit:
+        trades_response = requests.get(f"https://fapi.binance.com/fapi/v1/aggTrades", params={
+            "symbol": symbol,
+            "limit": 1000,
+            "startTime": start_time,
+            "endTime": end_time
+        })
+
+        if trades_response.status_code == 418:
+            time.sleep(5)  # Ждем 5 секунд, если получен статус код 418
+            continue
+
+        trades = trades_response.json()
+
+        if not trades:
+            break
+
+        lm = cvd[-1][0] if cvd else 0
+        for trade in trades:
+            cm = trade['T'] // 1000 // 60
+            curr_cvd = float(trade['q']) if trade['m'] else -float(trade['q'])
+            if lm != cm:
+                lm = cm
+                cvd.append([cm, curr_cvd])
+            else:
+                cvd[-1][-1] += curr_cvd
+
+        if len(cvd) >= limit:
+            cvd = cvd[-limit:]  # Обрезаем до нужного лимита
+            break
+
+        # Обновляем start_time для следующего запроса
+        start_time = trades[-1]['T'] + 1  # Начинаем со следующей миллисекунды после последней сделки
+
+    return cvd
 
 
 def get_cvd_change(symbol, period):
