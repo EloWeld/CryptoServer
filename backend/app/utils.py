@@ -35,6 +35,8 @@ def get_oi_candles_minutes(symbol: str, period_minutes):
         "limit": limit,
     })
 
+    c_time = datetime.datetime.now().timestamp() // 60
+
     if response.status_code == 200:
         prices = response.json()
         filled_prices = []
@@ -43,6 +45,8 @@ def get_oi_candles_minutes(symbol: str, period_minutes):
             oi_value = price['sumOpenInterest']
             # Заполняем каждую минуту в 5-минутном интервале одинаковыми данными
             for i in range(5):
+                if (price['timestamp'] / 1000 // 60) + i + 1 > c_time:
+                    continue
                 filled_prices.append([
                     (price['timestamp'] / 1000 // 60) + i,
                     float(oi_value)
@@ -55,17 +59,18 @@ def get_oi_candles_minutes(symbol: str, period_minutes):
 
 def get_cvd(symbol, limit):
     # Запрос данных ордербука (глубина рынка)
-    trades_response = requests.get(f"https://fapi.binance.com/fapi/v1/trades", params={
+    trades_response = requests.get(f"https://fapi.binance.com/fapi/v1/aggTrades", params={
         "symbol": symbol,
         "limit": 1000,
+        "startTime": int((datetime.datetime.now() - datetime.timedelta(minutes=limit)).timestamp() * 1000)
     })
     trades = trades_response.json()
     cvd = []
 
     lm = 0
     for trade in trades:
-        cm = trade['time'] // 1000 // 60
-        curr_cvd = float(trade['qty']) if trade['isBuyerMaker'] else -float(trade['qty'])
+        cm = trade['T'] // 1000 // 60
+        curr_cvd = float(trade['q']) if trade['m'] else -float(trade['q'])
         if lm != cm:
             lm = cm
             cvd.append([cm, curr_cvd])

@@ -9,10 +9,23 @@ import { toast } from 'react-toastify';
 function Charts({ isAuthenticated, setIsAuthenticated }) {
     const [coins, setCoins] = useState([]);
     const [selectedCoin, setSelectedCoin] = useState(null);
+    const [timezoneOffset, setTimezoneOffset] = useState(0);
     const chartContainerRef = useRef();
     const chartRef = useRef();
+    const [loading, setLoading] = useState("...");
+
 
     useEffect(() => {
+        async function fetchUserData() {
+            try {
+                const userResponse = await axios.get('/api/user');
+                setTimezoneOffset(userResponse.data.timezone_offset);
+            } catch (error) {
+                toast.error(`'Error fetching user data: ${error}`)
+            }
+        }
+        fetchUserData();
+
         axios.get('/api/coins')
             .then(response => {
                 setCoins(response.data);
@@ -22,13 +35,27 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
             })
             .catch(error => {
                 console.error('Error fetching coins:', error);
+                toast.error(`Error fetching coins`)
             });
     }, []);
 
+
+    // Функция для форматирования времени в UTC
+    function formatDateTime(time) {
+        const date = new Date((time) * 1000);
+        return date.toISOString().slice(11, 16).replace('T', ' ');
+    }
+    // Функция для форматирования времени в UTC
+    function adjustTime(time) {
+        return (time * 60 + timezoneOffset * 3600);
+    }
+
     useEffect(() => {
         if (selectedCoin) {
+            setLoading("Загрузка графика...");  // Показываем спиннер
             axios.get(`/api/coins/${selectedCoin.id}/chart`)
                 .then(response => {
+                    setLoading("Рисуем график...");
                     if (response.data.message === "NO_PROCESS") {
                         toast.info("No process for this coin")
                     } else if (response.data.message === "NO_PRICE_HISTORY") {
@@ -54,6 +81,21 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
                             timeScale: {
                                 timeVisible: true,
                                 secondsVisible: true,
+                                tickMarkFormatter: formatDateTime // Форматирование времени в UTC
+                            },
+                            crossHair: {
+                                mode: 1, // Режим перекрестия
+                            },
+                            rightPriceScale: {
+                                borderColor: '#555',
+                            },
+                            watermark: {
+                                visible: true,
+                                fontSize: 24,
+                                horzAlign: 'left',
+                                vertAlign: 'bottom',
+                                color: 'rgba(255, 255, 255, 0.4)',
+                                text: 'DaVinchi',
                             },
                             width: chartContainerRef.current.clientWidth,
                             height: chartContainerRef.current.clientHeight,
@@ -61,78 +103,156 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
 
                         chartRef.current = chart;
 
-                        const firstPrice = response.data['price'][0][1];
 
-                        const lineData = response.data['price'].map(item => ({
-                            time: item[0] * 60, // Используйте Unix timestamp в секундах
-                            value: ((item[1] - firstPrice) / firstPrice) * 100 // Процентное изменение
+                        // ———————————————— PRICE ———————————————— //
+                        const priceData = response.data['price'].map(item => ({
+                            time: adjustTime(item[0]),
+                            value: item[1]
                         }));
 
-                        const lineSeries = chart.addLineSeries({ color: '#2962FF', }); // Purple
-                        lineSeries.setData(lineData);
+                        // Вычисление среднего значения и стандартного отклонения для цены
+                        const priceValues = priceData.map(item => item.value);
+                        const meanPrice = priceValues.reduce((acc, val) => acc + val, 0) / priceValues.length;
+                        const stdDevPrice = Math.sqrt(priceValues.map(val => (val - meanPrice) ** 2).reduce((acc, val) => acc + val, 0) / priceValues.length);
 
-                        const firstOi = response.data['oi'][0][1];
+                        // Нормализация значений цены и масштабирование в диапазоне от -100 до 100
+                        const normalizedPriceData = priceData.map(item => {
+                            const normalizedValue = (item.value - meanPrice) / stdDevPrice;
+                            return {
+                                time: item.time,
+                                value: Math.max(Math.min(normalizedValue * 100, 100), -100) // Ограничение значений в диапазоне -100 до 100
+                            };
+                        });
+
+                        const lineSeries = chart.addLineSeries({ color: '#2962FF' }); // Blue
+                        lineSeries.setData(normalizedPriceData);
+                        // ———————————————— OI ———————————————— //
                         const oiData = response.data['oi'].map(item => ({
-                            time: item[0] * 60, // Используйте Unix timestamp в секундах
-                            value: ((item[1] - firstOi) / firstOi) * 100 // Процентное изменение
+                            time: adjustTime(item[0]), // Используйте Unix timestamp в секундах
+                            value: item[1]
                         }));
+
+                        // Вычисление среднего значения и стандартного отклонения для OI
+                        const oiValues = oiData.map(item => item.value);
+                        const meanOi = oiValues.reduce((acc, val) => acc + val, 0) / oiValues.length;
+                        const stdDevOi = Math.sqrt(oiValues.map(val => (val - meanOi) ** 2).reduce((acc, val) => acc + val, 0) / oiValues.length);
+
+                        // Нормализация значений OI и масштабирование в диапазоне от -100 до 100
+                        const normalizedOiData = oiData.map(item => {
+                            const normalizedValue = (item.value - meanOi) / stdDevOi;
+                            return {
+                                time: item.time,
+                                value: Math.max(Math.min(normalizedValue * 100, 100), -100) // Ограничение значений в диапазоне -100 до 100
+                            };
+                        });
+
                         const oiSeries = chart.addLineSeries({ color: '#FF5733', }); // Orange
-                        oiSeries.setData(oiData);
-
-                        const firstCvd = response.data['cvd'][0][1];
+                        oiSeries.setData(normalizedOiData);
+                        // ———————————————— CVD ———————————————— //
                         const cvdData = response.data['cvd'].map(item => ({
-                            time: item[0] * 60, // Используйте Unix timestamp в секундах
-                            value: ((item[1] - firstCvd) / firstCvd) * 100 // Процентное изменение
+                            time: adjustTime(item[0]), // Используйте Unix timestamp в секундах
+                            value: item[1]
                         }));
-                        const cvdSeries = chart.addLineSeries({ color: '#33FF57', }); // Green
-                        cvdSeries.setData(cvdData);
 
-                        const firstVolume = response.data['volumes'][0][1];
+                        // Вычисление среднего значения и стандартного отклонения
+                        const cvdValues = cvdData.map(item => item.value);
+                        const meanCvd = cvdValues.reduce((acc, val) => acc + val, 0) / cvdValues.length;
+                        const stdDevCvd = Math.sqrt(cvdValues.map(val => (val - meanCvd) ** 2).reduce((acc, val) => acc + val, 0) / cvdValues.length);
+
+                        // Нормализация значений CVD и масштабирование в диапазоне от -100 до 100
+                        const normalizedCvdData = cvdData.map(item => {
+                            const normalizedValue = (item.value - meanCvd) / stdDevCvd;
+                            return {
+                                time: item.time,
+                                value: Math.max(Math.min(normalizedValue * 100, 100), -100) // Ограничение значений в диапазоне -100 до 100
+                            };
+                        });
+
+                        const cvdSeries = chart.addLineSeries({ color: '#33FF57' }); // Green
+                        cvdSeries.setData(normalizedCvdData);
+
+                        // ———————————————— VOLUMES ———————————————— //
                         const volumesData = response.data['volumes'].map(item => ({
-                            time: item[0] * 60, // Используйте Unix timestamp в секундах
-                            value: ((item[1] - firstVolume) / firstVolume) * 100 // Процентное изменение
+                            time: adjustTime(item[0]), // Используйте Unix timestamp в секундах
+                            value: item[1]
                         }));
-                        const volumeSeries = chart.addLineSeries({ color: '#FF33A6', }); // Pink
-                        volumeSeries.setData(volumesData);
 
+                        // Вычисление среднего значения и стандартного отклонения для объемов
+                        const volumeValues = volumesData.map(item => item.value);
+                        const meanVolume = volumeValues.reduce((acc, val) => acc + val, 0) / volumeValues.length;
+                        const stdDevVolume = Math.sqrt(volumeValues.map(val => (val - meanVolume) ** 2).reduce((acc, val) => acc + val, 0) / volumeValues.length);
 
+                        // Нормализация значений объемов и масштабирование в диапазоне от -100 до 100
+                        const normalizedVolumesData = volumesData.map(item => {
+                            const normalizedValue = (item.value - meanVolume) / stdDevVolume;
+                            return {
+                                time: item.time,
+                                value: Math.max(Math.min(normalizedValue * 100, 100), -100) // Ограничение значений в диапазоне -100 до 100
+                            };
+                        });
+
+                        const volumeSeries = chart.addLineSeries({ color: '#FF33A6' }); // Pink
+                        volumeSeries.setData(normalizedVolumesData);
 
                         // Добавляем легенду для выбранной монеты
                         const legend = document.createElement('div');
                         legend.style.position = 'absolute';
                         legend.style.top = '10px';
                         legend.style.left = '10px';
-                        legend.style.color = 'white';
-                        legend.setAttribute("class", "rounded bg-indigo-600");
-                        legend.style.padding = '5px';
-                        legend.style.zIndex = '5';
+                        legend.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                        legend.style.padding = '10px';
+                        legend.style.borderRadius = '5px';
+                        legend.style.zIndex = '1';
                         chartContainerRef.current.appendChild(legend);
 
-                        const firstRow = document.createElement('div');
-                        firstRow.innerHTML = selectedCoin.name;
-                        firstRow.style.color = 'white';
-                        legend.appendChild(firstRow);
+                        const priceRow = document.createElement('div');
+                        priceRow.innerHTML = 'Price:';
+                        priceRow.style.color = '#2962FF'; // Blue
+                        legend.appendChild(priceRow);
+
+                        const oiRow = document.createElement('div');
+                        oiRow.innerHTML = 'OI:';
+                        oiRow.style.color = '#FF5733'; // Orange
+                        legend.appendChild(oiRow);
+
+                        const cvdRow = document.createElement('div');
+                        cvdRow.innerHTML = 'CVD:';
+                        cvdRow.style.color = '#33FF57'; // Green
+                        legend.appendChild(cvdRow);
+
+                        const volumeRow = document.createElement('div');
+                        volumeRow.innerHTML = 'Volume:';
+                        volumeRow.style.color = '#FF33A6'; // Pink
+                        legend.appendChild(volumeRow);
 
                         chart.subscribeCrosshairMove(param => {
-                            let priceFormatted = '';
                             if (param.time) {
-                                const data = param.seriesData.get(lineSeries);
-                                if (data) {
-                                    const price = data.value !== undefined ? data.value : data.close;
-                                    priceFormatted = price.toFixed(2);
-                                }
+                                const priceData = param.seriesData.get(lineSeries);
+                                const oiData = param.seriesData.get(oiSeries);
+                                const cvdData = param.seriesData.get(cvdSeries);
+                                const volumeData = param.seriesData.get(volumeSeries);
+
+                                const priceValue = priceData ? (priceData.value !== undefined ? priceData.value : priceData.close) : 'N/A';
+                                const oiValue = oiData ? (oiData.value !== undefined ? oiData.value : oiData.close) : 'N/A';
+                                const cvdValue = cvdData ? (cvdData.value !== undefined ? cvdData.value : cvdData.close) : 'N/A';
+                                const volumeValue = volumeData ? (volumeData.value !== undefined ? volumeData.value : volumeData.close) : 'N/A';
+
+                                priceRow.innerHTML = `Price: <strong>${typeof priceValue === 'number' ? priceValue.toFixed(2) : priceValue}</strong>`;
+                                oiRow.innerHTML = `OI: <strong>${typeof oiValue === 'number' ? oiValue.toFixed(2) : oiValue}</strong>`;
+                                cvdRow.innerHTML = `CVD: <strong>${typeof cvdValue === 'number' ? cvdValue.toFixed(2) : cvdValue}</strong>`;
+                                volumeRow.innerHTML = `Volume: <strong>${typeof volumeValue === 'number' ? volumeValue.toFixed(2) : volumeValue}</strong>`;
                             }
-                            firstRow.innerHTML = `${selectedCoin.name} <strong>${priceFormatted}</strong>`;
                         });
 
                         chart.timeScale().fitContent();
+                        setLoading(null);
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching coin chart data:', error);
                 });
         }
-    }, [selectedCoin]);
+    }, [selectedCoin, timezoneOffset]);
 
     return (
         <div>
@@ -165,7 +285,18 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
                         </Listbox>
                     </div>
                 </div>
-                <div ref={chartContainerRef} className='rounded-2xl shadow-xl overflow-hidden border-2 border-indigo-500 my-4' style={{ position: 'relative', width: '100%', height: '500px', }} />
+
+                <div ref={chartContainerRef} className='rounded-2xl shadow-xl overflow-hidden border-2 border-indigo-500 my-4' style={{ position: 'relative', width: '100%', height: '500px', }}>
+                    {loading &&
+                        <div className="flex justify-center items-center h-full">
+                            <div type="button" class="inline-flex items-center px-4 py-2 font-semibold leading-6 text-sm shadow rounded-md text-white bg-indigo-500 transition ease-in-out duration-150">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                {loading}
+                            </div></div>}
+                </div>
             </div>
         </div>
     );
