@@ -232,9 +232,9 @@ def process_function(app: Flask, user_id):
             user: User = session.query(User).get(user_id)
             loguru.logger.info(f"Process started for user {user_id} {user.username}")
             socketio.emit('log', {'data': f'Process started for user {user_id}.'}, room=user_id)
-            process = session.query(ParsingProcess).filter(ParsingProcess.user_id == user.id and ParsingProcess.status == "active").first()
+            process = session.query(ParsingProcess).filter(ParsingProcess.user_id == user.id, ParsingProcess.status == "active").first()
             while process is not None:
-                process = session.query(ParsingProcess).filter(ParsingProcess.user_id == user.id and ParsingProcess.status == "active").first()
+                process = session.query(ParsingProcess).filter(ParsingProcess.user_id == user.id, ParsingProcess.status == "active").first()
                 us: Settings = session.query(Settings).filter(Settings.user_id == user.id).first()
                 if us.use_spot:
                     prices = session.query(SpotPrice).all()
@@ -263,8 +263,8 @@ def process_function(app: Flask, user_id):
 @login_required
 def start_process():
     user_id = current_user.id
-    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id and ParsingProcess.status == "active").first()
-    if running_process:
+    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id, ParsingProcess.status == "active").first()
+    if running_process is not None:
         return jsonify({'status': 'Process already running'})
 
     if running_process is None:
@@ -281,7 +281,7 @@ def start_process():
 @login_required
 def get_process_status():
     user_id = current_user.id
-    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id and ParsingProcess.status == "active").first()
+    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id, ParsingProcess.status == "active").first()
     return jsonify({"is_running": running_process is not None}), 200
 
 
@@ -289,7 +289,7 @@ def get_process_status():
 @login_required
 def stop_process():
     user_id = current_user.id
-    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id and ParsingProcess.status == "active").first()
+    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id, ParsingProcess.status == "active").first()
     if running_process is None:
         return jsonify({"status": "Process is not running now"})
 

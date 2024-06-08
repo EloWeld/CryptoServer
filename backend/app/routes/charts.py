@@ -13,7 +13,7 @@ last_hook_time = {}
 
 @charts_bp.route('/api/coins', methods=['GET'])
 def coins():
-    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == current_user.id and ParsingProcess.status == "active").first()
+    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == current_user.id, ParsingProcess.status == "active").first()
     if running_process is None:
         return jsonify({"message": "NO_PROCESS"}), 404
     user_price_history = price_history.get(current_user.id, None)
@@ -24,7 +24,7 @@ def coins():
 
 @charts_bp.route('/api/coins/<coin>/chart', methods=['GET'])
 def coin_chart(coin: str):
-    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == current_user.id and ParsingProcess.status == "active").first()
+    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == current_user.id, ParsingProcess.status == "active").first()
     if running_process is None:
         return jsonify({"message": "NO_PROCESS"}), 200
 
