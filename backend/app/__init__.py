@@ -1,3 +1,4 @@
+import sys
 from flask import Flask, jsonify, request
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
@@ -47,10 +48,11 @@ def create_app():
     app.register_blueprint(processes_bp)
     app.register_blueprint(hooks_bp)
     app.register_blueprint(charts_bp)
-    from app.routes.processes import start_price_saving_thread, start_user_processes
 
-    with app.app_context():
-        start_price_saving_thread()
-        start_user_processes()
+    if len(sys.argv) > 1 and sys.argv[1] not in ['db', 'migrate', 'upgrade', 'downgrade']:
+        with app.app_context():
+            from app.routes.processes import start_price_saving_thread, start_user_processes
+            start_price_saving_thread()
+            start_user_processes()
 
     return app

@@ -124,12 +124,28 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
             otherCharts.forEach(chart => {
                 chart.timeScale().setVisibleLogicalRange(logicalRange);
             });
+
+            // Получаем текущее положение прокрутки основного графика
+            const scrollPosition = mainTimeScale.scrollPosition();
+
+            // Устанавливаем такое же положение прокрутки для всех остальных графиков
+            otherCharts.forEach(chart => {
+                chart.timeScale().scrollToPosition(scrollPosition, false);
+            });
         }
 
         mainTimeScale.subscribeVisibleLogicalRangeChange(applyChanges);
         otherCharts.forEach(chart => {
             chart.timeScale().subscribeVisibleLogicalRangeChange(applyChanges);
         });
+
+        // Центрирование графиков по правой стороне при инициализации
+        charts.forEach(chart => {
+            chart.timeScale().fitContent();
+        });
+
+        // Применяем начальные изменения для синхронизации всех графиков
+        applyChanges();
     }
     useEffect(() => {
         if (selectedCoin) {

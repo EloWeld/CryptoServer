@@ -1,5 +1,7 @@
 # app/routes/dashboard.py
+import cmath
 from copy import deepcopy
+import math
 import traceback
 from flask import Blueprint, Flask, current_app, jsonify, request
 from flask_login import login_required, current_user
@@ -133,6 +135,10 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
 def update_price(settings: Settings, message: FuturesPrice, username: str | int):
     global price_history
     symbol = message.symbol
+    if settings.use_only_usdt:
+        if not symbol.endswith('USDT'):
+            print('skip')
+            return
     price = float(message.price)
     curr_minute = (int(time.time()) // 60)
 
@@ -201,20 +207,20 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
             change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(
                 price_history[settings.user_id][symbol], SMOOTH_CHECK_MINUTES)
             if change_amount_pump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_pump:
-                oi = sorted(get_oi_candles(symbol, max(2, SMOOTH_CHECK_MINUTES // 5)), key=lambda x: x['timestamp'])
-                oi_values = [float(x['sumOpenInterest']) for x in oi]
+                oi = sorted(get_oi_candles_minutes(symbol, max(2, SMOOTH_CHECK_MINUTES)), key=lambda x: x['timestamp'])
+                oi_values = [float(x[1]) for x in oi]
                 oi_change = (oi_values[-1] - oi_values[0]) / oi_values[0] * 100
-                if oi_change > COI:
+                if abs(oi_change) > COI:
                     cvd_change = get_cvd_change(symbol, SMOOTH_CHECK_MINUTES+1)
                     if cvd_change > CCVD:
                         volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)
                         if volumes_change > CVVC:
                             log_and_journal(symbol, change_amount_pump, "pump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
             if change_amount_dump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_dump:
-                oi = sorted(get_oi_candles(symbol, max(2, SMOOTH_CHECK_MINUTES // 5)), key=lambda x: x['timestamp'])
-                oi_values = [float(x['sumOpenInterest']) for x in oi]
+                oi = sorted(get_oi_candles_minutes(symbol, max(2, SMOOTH_CHECK_MINUTES)), key=lambda x: x['timestamp'])
+                oi_values = [float(x[1]) for x in oi]
                 oi_change = (oi_values[-1] - oi_values[0]) / oi_values[0] * 100
-                if -oi_change > COI:
+                if abs(oi_change) > COI:
                     cvd_change = get_cvd_change(symbol, SMOOTH_CHECK_MINUTES+1)
                     if -cvd_change > CCVD:
                         volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)

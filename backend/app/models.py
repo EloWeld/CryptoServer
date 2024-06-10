@@ -63,34 +63,37 @@ class Settings(db.Model):
     oi_change_percent: float
     cvd_change_percent: float
     v_volumes_change_percent: float
-    use_spot: bool
-    use_wicks: bool
     tg_id: int
+
+    use_wicks: bool
+    use_spot: bool
+    use_only_usdt: bool
+    coins_blacklist: list[str]
 
     id = sa.Column(sa.Integer, primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id'), nullable=False)
     webhooks = sa.Column(sa.JSON, default=[])
     received_hooks = sa.Column(sa.JSON, default=[])
     blocked_hooks = sa.Column(sa.Integer, default=0)
-    domain = sa.Column(sa.String(255), default="")
+    domain = sa.Column(sa.String(255), default="https://www.davinchi-crypto.ru/api")
 
     check_per_minutes_rapid = sa.Column(sa.Integer, default=0)
     rapid_delay = sa.Column(sa.Integer(), default=3)
-    rapid_pump_webhook = sa.Column(sa.String(255), default="")
-    rapid_dump_webhook = sa.Column(sa.String(255), default="")
-    rapid_pump_data = sa.Column(sa.Text, default="")
-    rapid_dump_data = sa.Column(sa.Text, default="")
-    rapid_enable_pump = sa.Column(sa.Boolean, default=False)
-    rapid_enable_dump = sa.Column(sa.Boolean, default=False)
+    rapid_pump_webhook = sa.Column(sa.String(255), default="https://hook.finandy.com/?")
+    rapid_dump_webhook = sa.Column(sa.String(255), default="https://hook.finandy.com/?")
+    rapid_pump_data = sa.Column(sa.Text, default="{}")
+    rapid_dump_data = sa.Column(sa.Text, default="{}")
+    rapid_enable_pump = sa.Column(sa.Boolean, default=True)
+    rapid_enable_dump = sa.Column(sa.Boolean, default=True)
 
     check_per_minutes_smooth = sa.Column(sa.Integer, default=0)
     smooth_delay = sa.Column(sa.Integer(), default=3)
-    smooth_pump_webhook = sa.Column(sa.String(255), default="")
-    smooth_dump_webhook = sa.Column(sa.String(255), default="")
-    smooth_pump_data = sa.Column(sa.Text, default="")
-    smooth_dump_data = sa.Column(sa.Text, default="")
-    smooth_enable_pump = sa.Column(sa.Boolean, default=False)
-    smooth_enable_dump = sa.Column(sa.Boolean, default=False)
+    smooth_pump_webhook = sa.Column(sa.String(255), default="https://hook.finandy.com/?")
+    smooth_dump_webhook = sa.Column(sa.String(255), default="https://hook.finandy.com/?")
+    smooth_pump_data = sa.Column(sa.Text, default="{}")
+    smooth_dump_data = sa.Column(sa.Text, default="{}")
+    smooth_enable_pump = sa.Column(sa.Boolean, default=True)
+    smooth_enable_dump = sa.Column(sa.Boolean, default=True)
 
     price_change_percent = sa.Column(sa.Float, default=0.0)
     price_change_trigger_percent = sa.Column(sa.Float, default=0.0)
@@ -99,9 +102,12 @@ class Settings(db.Model):
     oi_change_percent = sa.Column(sa.Float, default=0.0)
     cvd_change_percent = sa.Column(sa.Float, default=0.0)
     v_volumes_change_percent = sa.Column(sa.Float, default=0.0)
+    tg_id = sa.Column(sa.BigInteger, default=-1)
+
+    coins_blacklist = sa.Column(sa.ARRAY(sa.String), nullable=False, default=[])
+    use_only_usdt = sa.Column(sa.Boolean, default=False, nullable=False, server_default='false')
     use_spot = sa.Column(sa.Boolean, default=False)
     use_wicks = sa.Column(sa.Boolean, default=False)
-    tg_id = sa.Column(sa.BigInteger, default=0)
 
 
 @dataclass

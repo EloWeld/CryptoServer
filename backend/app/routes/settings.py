@@ -97,9 +97,12 @@ def manage_settings():
         settings.oi_change_percent = data.get('oi_change_percent', 4.0)
         settings.cvd_change_percent = data.get('cvd_change_percent', 4.0)
         settings.v_volumes_change_percent = data.get('v_volumes_change_percent', 4.0)
+        settings.tg_id = data.get('tg_id', -1)
+
         settings.use_spot = data.get('use_spot', False)
         settings.use_wicks = data.get('use_wicks', False)
-        settings.tg_id = data.get('tg_id', -1)
+        settings.use_only_usdt = data.get('use_only_usdt', False)
+        settings.coins_blacklist = data.get('coins_blacklist', [])
 
         db.session.add(settings)
         db.session.commit()
@@ -112,27 +115,7 @@ def manage_settings():
         # Создание настроек с стандартными значениями
         default_settings = Settings(
             user_id=user.id,
-            webhooks=[],
-            received_hooks=[],
-            blocked_hooks=0,
-            domain="https://www.davinchi-crypto.ru/api",
 
-            rapid_pump_webhook="https://hook.finandy.com/?",
-            rapid_dump_webhook="https://hook.finandy.com/?",
-            rapid_pump_data="{}",
-            rapid_dump_data="{}",
-            rapid_enable_pump=True,
-            rapid_enable_dump=True,
-
-            smooth_pump_webhook="https://hook.finandy.com/?",
-            smooth_dump_webhook="https://hook.finandy.com/?",
-            smooth_pump_data="{}",
-            smooth_dump_data="{}",
-            smooth_enable_pump=True,
-            smooth_enable_dump=True,
-
-            raid_delay=2,
-            smooth_delay=2,
             check_per_minutes_rapid=1,
             check_per_minutes_smooth=3,
 
@@ -143,9 +126,6 @@ def manage_settings():
             oi_change_percent=4.0,
             cvd_change_percent=4.0,
             v_volumes_change_percent=4.0,
-            use_spot=False,
-            use_wicks=False,
-            tg_id=-1
         )
         db.session.add(default_settings)
         db.session.commit()

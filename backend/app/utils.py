@@ -1,5 +1,6 @@
 
 import datetime
+import time
 import loguru
 import requests
 
@@ -42,7 +43,7 @@ def get_oi_candles_minutes(symbol: str, period_minutes):
         filled_prices = []
         for price in prices:
             timestamp = price['timestamp']
-            oi_value = price['sumOpenInterest']
+            oi_value = price['sumOpenInterestValue']
             # Заполняем каждую минуту в 5-минутном интервале одинаковыми данными
             for i in range(5):
                 if (price['timestamp'] / 1000 // 60) + i > c_time:
@@ -55,6 +56,13 @@ def get_oi_candles_minutes(symbol: str, period_minutes):
     else:
         loguru.logger.error(f"Error fetching data from Binance API , code: {response.status_code}, data: {response.text}")
         return None
+
+
+def normalize_data(data):
+    min_val = min(data)
+    max_val = max(data)
+    normalized_data = [(x - min_val) / (max_val - min_val) * 200 - 100 for x in data]
+    return normalized_data
 
 
 def get_cvd(symbol, limit):
@@ -101,16 +109,16 @@ def get_cvd(symbol, limit):
 
 def get_cvd_change(symbol, period):
     cvd = get_cvd(symbol)
+    cvd_values = [float(cvd_entry[1]) for cvd_entry in cvd]
 
-    # Используем последние доступные данные, если недостаточно данных для заданного периода
-    if len(cvd) < period:
-        period = len(cvd)
+    # Нормализация значений CVD
+    normalized_cvd = normalize_data(cvd_values)
 
     # Определение CVD для текущего периода и периода минут назад
-    period_minutes_ago_cvd = cvd[-period][1]
-    current_minutes_cvd = cvd[-1][1]
+    period_minutes_ago_cvd = normalized_cvd[-period]
+    current_minutes_cvd = normalized_cvd[-1]
 
-    return ((current_minutes_cvd - period_minutes_ago_cvd) / period_minutes_ago_cvd) * 100 if period_minutes_ago_cvd != 0 else 0
+    return ((current_minutes_cvd - period_minutes_ago_cvd) / abs(period_minutes_ago_cvd)) * 100 if period_minutes_ago_cvd != 0 else 0
 
 
 def get_volumes(symbol, limit=100):
@@ -123,10 +131,33 @@ def get_volumes(symbol, limit=100):
 def get_volumes_change(symbol, limit=100):
     # Запрос данных ордербука (глубина рынка)
     volumes = get_volumes(symbol, limit)
-    past_vol = float(volumes[0][1])
-    current_vol = float(volumes[-1][1])
+    volume_values = [float(volume[1]) for volume in volumes]
 
-    return ((current_vol - past_vol) / past_vol) * 100 if past_vol != 0 else float('inf')
+    # Нормализация значений объема
+    normalized_volumes = normalize_data(volume_values)
+
+    past_vol = normalized_volumes[0]
+    current_vol = normalized_volumes[-1]
+
+    return ((current_vol - past_vol) / abs(past_vol)) * 100 if past_vol != 0 else float('inf')
+
+
+def get_binance_future_symbols():
+    url = "https://fapi.binance.com/fapi/v1/exchangeInfo"
+    response = requests.get(url)
+    data = response.json()
+
+    symbols = [symbol['symbol'] for symbol in data['symbols']]
+    return symbols
+
+
+def get_binance_spot_symbols():
+    url = "https://api.binance.com/api/v3/exchangeInfo"
+    response = requests.get(url)
+    data = response.json()
+
+    symbols = [symbol['symbol'] for symbol in data['symbols']]
+    return symbols
 
 
 def get_futures_prices():
