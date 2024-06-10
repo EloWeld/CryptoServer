@@ -171,8 +171,11 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
 
                         chartsRef.current = [priceChart, oiChart, cvdChart, volumesChart];
 
-
-                        synchronizeTimescale([priceChart, volumesChart, cvdChart, oiChart]);
+                        try {
+                            synchronizeTimescale([priceChart, volumesChart, cvdChart, oiChart]);
+                        } catch (e) {
+                            console.error(e);
+                        }
 
 
 
