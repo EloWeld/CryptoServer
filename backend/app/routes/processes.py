@@ -139,6 +139,10 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
         if not symbol.endswith('USDT'):
             print('skip')
             return
+    if settings.coins_blacklist:
+        if symbol in settings.coins_blacklist:
+            print('skip, blacklist')
+            return
     price = float(message.price)
     curr_minute = (int(time.time()) // 60)
 
