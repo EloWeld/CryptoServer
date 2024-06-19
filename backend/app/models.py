@@ -57,6 +57,23 @@ class Settings(db.Model):
     smooth_enable_pump: bool
     smooth_enable_dump: bool
 
+    reverse_rapid_pump_data: str
+    reverse_rapid_dump_data: str
+    reverse_rapid_enable_pump: bool
+    reverse_rapid_enable_dump: bool
+    reverse_smooth_pump_data: str
+    reverse_smooth_dump_data: str
+    reverse_smooth_enable_pump: bool
+    reverse_smooth_enable_dump: bool
+
+    default_vol_usd: float
+    reverse_vol_usd: float
+    reverse_last_order_dist: float
+    reverse_full_orders_count: int
+    reverse_orders_count: int
+    reverse_multiplier: float
+    reverse_density: float
+
     price_change_percent: float
     price_change_trigger_percent: float
     max_save_minutes: int
@@ -94,6 +111,23 @@ class Settings(db.Model):
     smooth_dump_data = sa.Column(sa.Text, default="{}")
     smooth_enable_pump = sa.Column(sa.Boolean, default=True)
     smooth_enable_dump = sa.Column(sa.Boolean, default=True)
+
+    reverse_rapid_pump_data = sa.Column(sa.Text, default="{}")
+    reverse_rapid_dump_data = sa.Column(sa.Text, default="{}")
+    reverse_rapid_enable_pump = sa.Column(sa.Boolean, default=True)
+    reverse_rapid_enable_dump = sa.Column(sa.Boolean, default=True)
+    reverse_smooth_pump_data = sa.Column(sa.Text, default="{}")
+    reverse_smooth_dump_data = sa.Column(sa.Text, default="{}")
+    reverse_smooth_enable_pump = sa.Column(sa.Boolean, default=True)
+    reverse_smooth_enable_dump = sa.Column(sa.Boolean, default=True)
+
+    default_vol_usd = sa.Column(sa.Float, default=1.0)
+    reverse_vol_usd = sa.Column(sa.Float, default=1.0)
+    reverse_last_order_dist = sa.Column(sa.Float, default=8.0)
+    reverse_full_orders_count = sa.Column(sa.Integer, default=10)
+    reverse_orders_count = sa.Column(sa.Integer, default=8)
+    reverse_multiplier = sa.Column(sa.Float, default=1.5)
+    reverse_density = sa.Column(sa.Float, default=0.7)
 
     price_change_percent = sa.Column(sa.Float, default=0.0)
     price_change_trigger_percent = sa.Column(sa.Float, default=0.0)

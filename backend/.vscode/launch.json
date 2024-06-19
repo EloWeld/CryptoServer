@@ -10,6 +10,13 @@
       "request": "launch",
       "program": "run.py",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "Test grid",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "test_grid.py",
+      "console": "integratedTerminal"
     }
   ]
 }

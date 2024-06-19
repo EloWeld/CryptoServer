@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import axios from 'axiosConfig';
 import { toast } from 'react-toastify';
-import { CustomNumberInput } from '../components/CustomNumberInput';
+import { CustomNumberInput } from 'components/CustomNumberInput';
 
 function AddWebhook({ isAuthenticated, setIsAuthenticated }) {
   const [formData, setFormData] = useState({

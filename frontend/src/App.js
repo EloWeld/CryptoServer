@@ -6,6 +6,9 @@ import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import AddWebhook from './pages/AddWebhook';
 import Charts from './pages/Charts';
+import axios from './axiosConfig';
+
+
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -13,9 +16,27 @@ function App() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      console.log("Token found");
-      setIsAuthenticated(true);
+      console.log("Found token, try to verify");
+      axios.get('/api/verify-token', {
+        headers: {
+          'Authorization': token
+        }
+      })
+        .then(response => {
+          const data = response.data;
+          console.log("Verify-result", data);
+          if (data.message === "Token is valid") {
+            setIsAuthenticated(true);
+          } else {
+            setIsAuthenticated(false);
+          }
+        })
+        .catch((e) => {
+          console.log("Verify request error", e);
+          setIsAuthenticated(false);
+        });
     } else {
+      console.log("No token");
       setIsAuthenticated(false);
     }
   }, []);
@@ -37,15 +58,26 @@ function App() {
     />
   );
 
+  const PublicRoute = ({ component: Component, ...rest }) => (
+    <Route
+      {...rest}
+      render={(props) =>
+        !isAuthenticated ? (
+          <Component {...props} setIsAuthenticated={setIsAuthenticated} />
+        ) : (
+          <Redirect to="/dashboard" />
+        )
+      }
+    />
+  );
+
   return (
     <Router>
       <Switch>
         <Route path="/" exact>
           {!isAuthenticated ? <Home /> : <Dashboard isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />}
         </Route>
-        <Route path="/login">
-          <Auth setIsAuthenticated={setIsAuthenticated} />
-        </Route>
+        <PublicRoute path="/login" component={Auth} />
         <ProtectedRoute path="/charts" component={Charts} />
         <ProtectedRoute path="/add-webhook" component={AddWebhook} />
         <ProtectedRoute path="/dashboard" component={Dashboard} />

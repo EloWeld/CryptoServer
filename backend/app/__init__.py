@@ -49,10 +49,12 @@ def create_app():
     app.register_blueprint(hooks_bp)
     app.register_blueprint(charts_bp)
 
-    if len(sys.argv) > 1 and sys.argv[1] not in ['db', 'migrate', 'upgrade', 'downgrade']:
+    if len(sys.argv) == 1 or len(sys.argv) > 1 and sys.argv[1] not in ['db', 'migrate', 'upgrade', 'downgrade']:
         with app.app_context():
-            from app.routes.processes import start_price_saving_thread, start_user_processes
+            from app.bacground_tasks.check_prices import start_price_check_thread
+            from app.bacground_tasks.processes_tasks import start_price_saving_thread, start_user_processes
             start_price_saving_thread()
             start_user_processes()
+            start_price_check_thread()
 
     return app

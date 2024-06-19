@@ -147,6 +147,26 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
         // Применяем начальные изменения для синхронизации всех графиков
         applyChanges();
     }
+    function synchronizeCrosshair(charts) {
+        charts.forEach((chart, index) => {
+            chart.subscribeCrosshairMove((param) => {
+                if (!param || !param.time) return;
+                charts.forEach((syncedChart, syncedIndex) => {
+                    if (index !== syncedIndex) {
+                        syncedChart.moveCrosshair(param.point);
+                    }
+                });
+            });
+
+            chart.subscribeCrosshairMove((param) => {
+                if (!param || param.point === undefined) {
+                    charts.forEach(syncedChart => {
+                        syncedChart.clearCrosshair();
+                    });
+                }
+            });
+        });
+    }
     useEffect(() => {
         if (selectedCoin) {
             setLoading("Загрузка графика...");  // Показываем спиннер
@@ -172,7 +192,9 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
                         chartsRef.current = [priceChart, oiChart, cvdChart, volumesChart];
 
                         try {
-                            synchronizeTimescale([priceChart, volumesChart, cvdChart, oiChart]);
+                            synchronizeTimescale(chartsRef.current);
+                            synchronizeCrosshair(chartsRef.current);
+
                         } catch (e) {
                             console.error(e);
                         }
@@ -185,6 +207,22 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
                             time: adjustTime(item[0]),
                             value: ((item[1] - firstPrice) / firstPrice) * 100 // Процентное изменение
                         }));
+                        // Maybe in future
+                        const N = 1
+                        const priceChangeData = response.data['price'].map((item, index, array) => {
+                            if (index >= N) {
+                                const referencePrice = response.data['price'][index - N][1]; // Цена N элементов назад
+                                return {
+                                    time: adjustTime(item[0]),
+                                    value: ((item[1] - referencePrice) / referencePrice) * 100 // Процентное изменение
+                                };
+                            } else {
+                                return {
+                                    time: adjustTime(item[0]),
+                                    value: 0 // или 0, или любое другое значение для первых N элементов
+                                };
+                            }
+                        });
 
                         const lineSeries = priceChart.addAreaSeries({
                             lineColor: '#2962FF',
@@ -301,8 +339,28 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
                         volumeRow.style.color = '#FF33A6'; // Pink
                         legendVol.appendChild(volumeRow);
 
+                        function getCrosshairDataPoint(series, param) {
+                            if (!param.time) {
+                                return null;
+                            }
+                            const dataPoint = param.seriesData.get(series);
+                            return dataPoint || null;
+                        }
+
+                        function syncCrosshair(chart, series, dataPoint) {
+                            if (dataPoint) {
+                                chart.setCrosshairPosition(dataPoint.value, dataPoint.time, series);
+                                return;
+                            }
+                            chart.clearCrosshairPosition();
+                        }
+
                         priceChart.subscribeCrosshairMove(param => {
                             if (param.time) {
+                                const dataPoint = getCrosshairDataPoint(lineSeries, param);
+                                syncCrosshair(oiChart, oiSeries, dataPoint);
+                                syncCrosshair(cvdChart, cvdSeries, dataPoint);
+                                syncCrosshair(volumesChart, volumeSeries, dataPoint);
                                 const priceData = param.seriesData.get(lineSeries);
                                 const priceValue = priceData ? (priceData.value !== undefined ? priceData.value : priceData.close) : 'N/A';
 
@@ -315,6 +373,10 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
 
                         oiChart.subscribeCrosshairMove(param => {
                             if (param.time) {
+                                const dataPoint = getCrosshairDataPoint(oiSeries, param);
+                                syncCrosshair(priceChart, lineSeries, dataPoint);
+                                syncCrosshair(cvdChart, cvdSeries, dataPoint);
+                                syncCrosshair(volumesChart, volumeSeries, dataPoint);
                                 const oiData = param.seriesData.get(oiSeries);
                                 const oiValue = oiData ? (oiData.value !== undefined ? oiData.value : oiData.close) : 'N/A';
                                 oiRow.innerHTML = `OI: <strong>${typeof oiValue === 'number' ? oiValue.toFixed(2) : oiValue}</strong>`;
@@ -326,6 +388,10 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
 
                         cvdChart.subscribeCrosshairMove(param => {
                             if (param.time) {
+                                const dataPoint = getCrosshairDataPoint(cvdSeries, param);
+                                syncCrosshair(priceChart, lineSeries, dataPoint);
+                                syncCrosshair(oiChart, oiSeries, dataPoint);
+                                syncCrosshair(volumesChart, volumeSeries, dataPoint);
                                 const cvdData = param.seriesData.get(cvdSeries);
                                 const cvdValue = cvdData ? (cvdData.value !== undefined ? cvdData.value : cvdData.close) : 'N/A';
                                 cvdRow.innerHTML = `CVD: <strong>${typeof cvdValue === 'number' ? cvdValue.toFixed(2) : cvdValue}</strong>`;
@@ -337,6 +403,10 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
 
                         volumesChart.subscribeCrosshairMove(param => {
                             if (param.time) {
+                                const dataPoint = getCrosshairDataPoint(volumeSeries, param);
+                                syncCrosshair(priceChart, lineSeries, dataPoint);
+                                syncCrosshair(oiChart, oiSeries, dataPoint);
+                                syncCrosshair(cvdChart, cvdSeries, dataPoint);
                                 const volumeData = param.seriesData.get(volumeSeries);
                                 const volumeValue = volumeData ? (volumeData.value !== undefined ? volumeData.value : volumeData.close) : 'N/A';
                                 volumeRow.innerHTML = `Volume: <strong>${typeof volumeValue === 'number' ? volumeValue.toFixed(2) : volumeValue}</strong>`;
@@ -345,6 +415,7 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
 
                         volumesChart.timeScale().fitContent();
                         setLoading(null);
+
                     }
                 })
                 ;

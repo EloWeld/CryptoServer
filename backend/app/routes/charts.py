@@ -2,7 +2,8 @@ import time
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from dataclasses import asdict
-from app.routes.processes import process_running, price_history
+from app.bacground_tasks.base import process_running
+from app.bacground_tasks.base import price_history
 from app.models import ChangesLog, ParsingProcess, Settings, db
 from app.utils import get_binance_future_symbols, get_binance_spot_symbols, get_cvd, get_cvd_change, get_oi_candles, get_oi_candles_minutes, get_volumes, get_volumes_change
 

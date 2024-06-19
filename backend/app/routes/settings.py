@@ -86,6 +86,23 @@ def manage_settings():
         settings.smooth_enable_pump = data.get('smooth_enable_pump', True)
         settings.smooth_enable_dump = data.get('smooth_enable_dump', True)
 
+        settings.reverse_rapid_pump_data = data.get('reverse_rapid_pump_data', settings.reverse_rapid_pump_data)
+        settings.reverse_rapid_dump_data = data.get('reverse_rapid_dump_data', settings.reverse_rapid_dump_data)
+        settings.reverse_rapid_enable_pump = data.get('reverse_rapid_enable_pump', settings.reverse_rapid_enable_pump)
+        settings.reverse_rapid_enable_dump = data.get('reverse_rapid_enable_dump', settings.reverse_rapid_enable_dump)
+        settings.reverse_smooth_pump_data = data.get('reverse_smooth_pump_data', settings.reverse_smooth_pump_data)
+        settings.reverse_smooth_dump_data = data.get('reverse_smooth_dump_data', settings.reverse_smooth_dump_data)
+        settings.reverse_smooth_enable_pump = data.get('reverse_smooth_enable_pump', settings.reverse_smooth_enable_pump)
+        settings.reverse_smooth_enable_dump = data.get('reverse_smooth_enable_dump', settings.reverse_smooth_enable_dump)
+
+        settings.default_vol_usd = data.get('default_vol_usd', settings.default_vol_usd)
+        settings.reverse_vol_usd = data.get('reverse_vol_usd', settings.reverse_vol_usd)
+        settings.reverse_last_order_dist = data.get('reverse_last_order_dist', settings.reverse_last_order_dist)
+        settings.reverse_full_orders_count = data.get('reverse_full_orders_count', settings.reverse_full_orders_count)
+        settings.reverse_orders_count = data.get('reverse_orders_count', settings.reverse_orders_count)
+        settings.reverse_multiplier = data.get('reverse_multiplier', settings.reverse_multiplier)
+        settings.reverse_density = data.get('reverse_density', settings.reverse_density)
+
         settings.check_per_minutes_rapid = data.get('check_per_minutes_rapid', 1)
         settings.check_per_minutes_smooth = data.get('check_per_minutes_smooth', 3)
         settings.rapid_delay = data.get('rapid_delay', 3)
