@@ -3,18 +3,19 @@ import React from 'react';
 const CustomNumberInput = ({ id, name, value, onChange, required, className }) => {
     return (
         <input
-            type="number"
+            type="text"
             id={id}
             name={name}
             value={value}
             onChange={onChange}
-            pattern="^\d*\.?\d*$"
+            pattern="^-?\d*\.?\d*$"
             onKeyDown={(e) => {
                 if (
                     !/[0-9]/.test(e.key) &&
                     e.key !== 'Backspace' &&
                     e.key !== 'ArrowLeft' &&
                     e.key !== 'ArrowRight' &&
+                    e.key !== '-' &&
                     e.key !== 'Delete' &&
                     !(e.ctrlKey || e.metaKey) // Allow Ctrl or Cmd combinations
                 ) {
@@ -28,7 +29,12 @@ const CustomNumberInput = ({ id, name, value, onChange, required, className }) =
 };
 
 const CustomFloatInput = ({ id, name, value, onChange, required, className }) => {
-   
+    const handleChange = (e) => {
+        const newValue = e.target.value;
+        if (/^-?\d*\.?\d*$/.test(newValue)) {
+            onChange(e);
+        }
+    };
     return (
         <input
             type="text"
@@ -36,17 +42,22 @@ const CustomFloatInput = ({ id, name, value, onChange, required, className }) =>
             id={id}
             name={name}
             value={value}
-            onChange={onChange}
+            onChange={handleChange}
+            pattern="^-?\d*\.?\d*$"
             onKeyDown={(e) => {
+                const stringValue = value ? value.toString() : "";
+                const valueContainsDot = stringValue.includes('.');
                 if (
                     !/[0-9]/.test(e.key) &&
                     e.key !== 'Backspace' &&
                     e.key !== 'ArrowLeft' &&
                     e.key !== 'ArrowRight' &&
                     e.key !== 'Delete' &&
-                    e.key !== "." && !value.includes('.') &&
+                    (e.key !== '.' || valueContainsDot) &&
+                    e.key !== '-' &&
                     !(e.ctrlKey || e.metaKey) // Allow Ctrl or Cmd combinations
                 ) {
+
                     e.preventDefault();
                 }
             }}

@@ -59,44 +59,36 @@ const ProcessTypeSettings = ({ settings, handleChange, type, title }) => {
             {!isRapid && (
                 <>
                     <label htmlFor="price_change_trigger_percent" className="block text-sm font-medium text-gray-700">Процент изменения цены для проверки других параметров</label>
-                    <input
-                        type="text"
+                    <CustomFloatInput
                         id="price_change_trigger_percent"
                         name="price_change_trigger_percent"
-                        pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
                         value={settings.price_change_trigger_percent}
                         onChange={handleChange}
                         required
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
                     />
                     <label htmlFor="oi_change_percent" className="block text-sm font-medium text-gray-700">Процент изменения OI</label>
-                    <input
-                        type="text"
+                    <CustomFloatInput
                         id="oi_change_percent"
                         name="oi_change_percent"
-                        pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
                         value={settings.oi_change_percent}
                         onChange={handleChange}
                         required
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
                     />
                     <label htmlFor="cvd_change_percent" className="block text-sm font-medium text-gray-700">Процент изменения CVD</label>
-                    <input
-                        type="text"
+                    <CustomFloatInput
                         id="cvd_change_percent"
                         name="cvd_change_percent"
-                        pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
                         value={settings.cvd_change_percent}
                         onChange={handleChange}
                         required
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
                     />
                     <label htmlFor="v_volumes_change_percent" className="block text-sm font-medium text-gray-700">Процент изменения объёмов</label>
-                    <input
-                        type="text"
+                    <CustomFloatInput
                         id="v_volumes_change_percent"
                         name="v_volumes_change_percent"
-                        pattern="([0-9]+.{0,1}[0-9]*,{0,1})*[0-9]"
                         value={settings.v_volumes_change_percent}
                         onChange={handleChange}
                         required
