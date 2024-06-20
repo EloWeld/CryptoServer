@@ -69,8 +69,9 @@ def get_cvd(symbol, limit):
     end_time = int(datetime.datetime.now().timestamp() * 1000)
     start_time = end_time - limit * 60 * 1000  # Начальное время для первого запроса
     cvd = []
+    attempts = 0
 
-    while len(cvd) < limit:
+    while len(cvd) < limit and attempts < 30:
         trades_response = requests.get(f"https://fapi.binance.com/fapi/v1/aggTrades", params={
             "symbol": symbol,
             "limit": 1000,
@@ -80,6 +81,7 @@ def get_cvd(symbol, limit):
 
         if trades_response.status_code == 418:
             time.sleep(5)  # Ждем 5 секунд, если получен статус код 418
+            attempts += 1
             continue
 
         trades = trades_response.json()
@@ -96,6 +98,7 @@ def get_cvd(symbol, limit):
                 cvd.append([cm, curr_cvd])
             else:
                 cvd[-1][-1] += curr_cvd
+        attempts += 1
 
         if len(cvd) >= limit:
             cvd = cvd[-limit:]  # Обрезаем до нужного лимита

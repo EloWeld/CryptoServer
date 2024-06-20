@@ -1,4 +1,6 @@
 import traceback
+
+from flask import current_app
 from app.bacground_tasks.base import lock, price_history, webhook_data
 from app.bacground_tasks.logs_utils import add_journal, send_reverse_webhook
 from app.bacground_tasks.base import connect_to_db
@@ -25,68 +27,70 @@ def get_threshhold_price(settings: Settings, logged_type: str, logged_price):
     return grid[settings.reverse_orders_count - 1]
 
 
-def check_prices():
-    session = connect_to_db()
-    while True:
-        try:
-            results = []
-            with lock:
-                subquery = session.query(ChangesLog.user_id, func.max(ChangesLog.created_at).label('max_created_at')
-                                         ).join(ParsingProcess, ParsingProcess.user_id == ChangesLog.user_id).filter(ParsingProcess.status == "active").group_by(ChangesLog.user_id).subquery()
-
-                # Алиас для ChangesLog, чтобы соединить с подзапросом
-                cl_alias = aliased(ChangesLog)
-
-                # Запрос для получения последних логов для каждого user_id
-                lastlogs = session.query(cl_alias).join(subquery, (cl_alias.user_id == subquery.c.user_id) & (cl_alias.created_at == subquery.c.max_created_at)).order_by(desc(cl_alias.created_at))
-
-                # Пример для получения результатов
-                results = lastlogs.all()
-
-            for log in results:
-                if log.user_id not in price_history:
-                    continue
-                if log.symbol not in price_history[log.user_id]:
-                    continue
-                if len(price_history[log.user_id][log.symbol]) < 2:
-                    continue
+def check_prices(app):
+    with app.app_context():
+        session = connect_to_db()
+        while True:
+            try:
+                results = []
                 with lock:
-                    settings: Settings = session.query(Settings).filter(Settings.user_id == log.user_id).first()
-                # Filter too old logs
-                if datetime.datetime.now() - log.created_at > datetime.timedelta(minutes=settings.max_save_minutes):
-                    continue
+                    subquery = session.query(ChangesLog.user_id, func.max(ChangesLog.created_at).label('max_created_at')
+                                             ).join(ParsingProcess, ParsingProcess.user_id == ChangesLog.user_id).filter(ParsingProcess.status == "active").group_by(ChangesLog.user_id).subquery()
 
-                # If no reverse_last_order_dist is settings
-                if not settings.reverse_last_order_dist:
-                    continue
+                    # Алиас для ChangesLog, чтобы соединить с подзапросом
+                    cl_alias = aliased(ChangesLog)
 
-                curr_user_prices = price_history[log.user_id][log.symbol]
-                logged_price = log.curr_price
-                curr_price = curr_user_prices[-1][-1]
-                threshold_price = get_threshhold_price(settings, log.type, logged_price)
+                    # Запрос для получения последних логов для каждого user_id
+                    lastlogs = session.query(cl_alias).join(subquery, (cl_alias.user_id == subquery.c.user_id) & (cl_alias.created_at == subquery.c.max_created_at)).order_by(desc(cl_alias.created_at))
 
-                # Creates reversal position of pump and otherwise
-                if log.type == 'pump' and curr_price <= threshold_price:
-                    # Filter enable flags
-                    if log.exchange == "rapid" and settings.reverse_rapid_enable_pump:
+                    # Пример для получения результатов
+                    results = lastlogs.all()
+
+                for log in results:
+                    if log.user_id not in price_history:
                         continue
-                    if log.exchange == "smooth" and settings.reverse_smooth_enable_pump:
+                    if log.symbol not in price_history[log.user_id]:
                         continue
-                    send_reverse_webhook(settings, log.symbol, curr_price, 'dump', logged_price, (threshold_price - logged_price) / logged_price * 100, exchange=log.exchange)
-                elif log.type == 'dump' and curr_price >= threshold_price:
-                    # Filter enable flags
-                    if log.exchange == "rapid" and settings.reverse_rapid_enable_dump:
+                    if len(price_history[log.user_id][log.symbol]) < 2:
                         continue
-                    if log.exchange == "smooth" and settings.reverse_smooth_enable_dump:
+                    with lock:
+                        settings: Settings = session.query(Settings).filter(Settings.user_id == log.user_id).first()
+                    # Filter too old logs
+                    if datetime.datetime.now() - log.created_at > datetime.timedelta(minutes=settings.max_save_minutes):
                         continue
-                    send_reverse_webhook(settings, log.symbol, curr_price, 'pump', logged_price, (threshold_price - logged_price) / logged_price * 100, exchange=log.exchange)
-            time.sleep(1)  # Частота проверки
-        except Exception as err:
-            loguru.logger.error(f"Error on check prices {err} {traceback.format_exc()}")
+
+                    # If no reverse_last_order_dist is settings
+                    if not settings.reverse_last_order_dist:
+                        continue
+
+                    curr_user_prices = price_history[log.user_id][log.symbol]
+                    logged_price = log.curr_price
+                    curr_price = curr_user_prices[-1][-1]
+                    threshold_price = get_threshhold_price(settings, log.type, logged_price)
+
+                    # Creates reversal position of pump and otherwise
+                    if log.type == 'pump' and curr_price <= threshold_price:
+                        # Filter enable flags
+                        if log.exchange == "rapid" and settings.reverse_rapid_enable_pump:
+                            continue
+                        if log.exchange == "smooth" and settings.reverse_smooth_enable_pump:
+                            continue
+                        send_reverse_webhook(settings, log.symbol, curr_price, 'dump', logged_price, (threshold_price - logged_price) / logged_price * 100, exchange=log.exchange)
+                    elif log.type == 'dump' and curr_price >= threshold_price:
+                        # Filter enable flags
+                        if log.exchange == "rapid" and settings.reverse_rapid_enable_dump:
+                            continue
+                        if log.exchange == "smooth" and settings.reverse_smooth_enable_dump:
+                            continue
+                        send_reverse_webhook(settings, log.symbol, curr_price, 'pump', logged_price, (threshold_price - logged_price) / logged_price * 100, exchange=log.exchange)
+                time.sleep(5)  # Частота проверки
+            except Exception as err:
+                loguru.logger.error(f"Error on check prices {err} {traceback.format_exc()}")
 
 
 def start_price_check_thread():
-    check_thread = threading.Thread(target=check_prices)
+    app = current_app._get_current_object()
+    check_thread = threading.Thread(target=check_prices, args=(app,))
     check_thread.start()
 
 
