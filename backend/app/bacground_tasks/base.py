@@ -24,5 +24,6 @@ def connect_to_db():
 @lru_cache(maxsize=128)
 def get_settings(user_id):
     from app.models import Settings
-    with session() as session:
+    session = connect_to_db()
+    with session:
         return session.query(Settings).filter(Settings.user_id == user_id).first()
