@@ -70,7 +70,7 @@ def process_function(app: Flask, user_id):
                     try:
                         update_price(us, price, user_id)
                     except Exception as e:
-                        err_msg = f"Error in cycle {e} {traceback.format_exc()}"
+                        err_msg = f"Error in cycle update price: {e} {traceback.format_exc()}"
                         loguru.logger.error(err_msg)
                         socketio.emit('log', {'data': err_msg}, room=user_id)
 
@@ -80,6 +80,8 @@ def process_function(app: Flask, user_id):
             process_running[user_id] = False
             if user_id in process_threads:
                 del process_threads[user_id]
+        except Exception as err:
+            loguru.logger.error(f"Error on check prices {err} {traceback.format_exc()}")
         finally:
             session.close()
 
