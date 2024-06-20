@@ -108,7 +108,7 @@ def get_cvd(symbol, limit):
 
 
 def get_cvd_change(symbol, period):
-    cvd = get_cvd(symbol)
+    cvd = get_cvd(symbol, period)
     cvd_values = [float(cvd_entry[1]) for cvd_entry in cvd]
 
     # Нормализация значений CVD

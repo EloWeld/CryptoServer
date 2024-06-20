@@ -117,6 +117,7 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
             price_history[settings.user_id][symbol][-1] = (curr_minute, price)
 
         def calculate_changes(prices, interval):
+            # (-int+1) because [-1] is the current price
             old_price = prices[-(interval+1)][1]
             if settings.use_wicks:
                 min_price = min(x[1] for x in prices[-(interval+1):-1])
