@@ -57,6 +57,8 @@ def check_prices(app):
                     settings: Settings = get_settings(log.user_id)
                     if not settings.reverse_rapid_enable_pump and not settings.reverse_rapid_enable_dump and not settings.reverse_smooth_enable_pump and not settings.reverse_smooth_enable_dump:
                         continue
+                    if not settings.reverse_last_order_dist or not settings.reverse_density or not settings.reverse_full_orders_count:
+                        continue
                     # Filter too old logs
                     if datetime.datetime.now() - log.created_at > datetime.timedelta(minutes=settings.max_save_minutes):
                         continue
