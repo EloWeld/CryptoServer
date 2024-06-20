@@ -1,7 +1,7 @@
 import traceback
 
 from flask import current_app
-from app.bacground_tasks.base import lock, price_history, webhook_data
+from app.bacground_tasks.base import get_settings, lock, price_history, webhook_data
 from app.bacground_tasks.logs_utils import add_journal, send_reverse_webhook
 from app.bacground_tasks.base import connect_to_db
 from app import socketio
@@ -53,8 +53,7 @@ def check_prices(app):
                         continue
                     if len(price_history[log.user_id][log.symbol]) < 2:
                         continue
-                    with lock:
-                        settings: Settings = session.query(Settings).filter(Settings.user_id == log.user_id).first()
+                    settings = get_settings(log.user_id)
                     # Filter too old logs
                     if datetime.datetime.now() - log.created_at > datetime.timedelta(minutes=settings.max_save_minutes):
                         continue

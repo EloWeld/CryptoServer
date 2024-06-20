@@ -1,3 +1,4 @@
+from functools import lru_cache
 import threading
 
 from app.utils import Config
@@ -18,3 +19,10 @@ def connect_to_db():
     Session = sessionmaker(bind=engine)
     session = Session()
     return session
+
+
+@lru_cache(maxsize=128)
+def get_settings(user_id):
+    from app.models import Settings
+    with session() as session:
+        return session.query(Settings).filter(Settings.user_id == user_id).first()

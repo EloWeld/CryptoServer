@@ -3,7 +3,7 @@ import datetime
 import threading
 from flask import Flask, current_app
 from app import socketio
-from app.bacground_tasks.base import lock, process_running, process_threads
+from app.bacground_tasks.base import get_settings, lock, process_running, process_threads
 from app.bacground_tasks.check_prices import update_price
 from app.models import FuturesPrice, ParsingProcess, Settings, SpotPrice, User, db
 from app.utils import get_futures_prices, get_spot_prices, loguru, time
@@ -73,7 +73,7 @@ def process_function(app: Flask, user_id):
             while process is not None:
                 with lock:
                     process = session.query(ParsingProcess).filter(ParsingProcess.user_id == user.id, ParsingProcess.status == "active").first()
-                    us: Settings = session.query(Settings).filter(Settings.user_id == user.id).first()
+                    us: Settings = get_settings(user.id)
                 if us.use_spot:
                     prices = global_s_prices
                 else:
@@ -86,7 +86,7 @@ def process_function(app: Flask, user_id):
                         loguru.logger.error(err_msg)
                         socketio.emit('log', {'data': err_msg}, room=user_id)
 
-                time.sleep(0.5)
+                time.sleep(2.5)
             loguru.logger.info(f"Process has stopped for user {user_id} {user.username}")
             socketio.emit('log', {'data': f'Process has stopped for user {user_id} {user.username}.'}, room=user_id)
             process_running[user_id] = False
