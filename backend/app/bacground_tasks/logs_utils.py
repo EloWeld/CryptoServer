@@ -21,10 +21,12 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
         if log_entry.symbol == data["symbol"] and log_entry.type == data["type"] and datetime.datetime.now() - log_entry.created_at < datetime.timedelta(minutes=delay):
             return  # Запись уже существует, не добавляем дубликат
     subtype = data.get('subtype', 'default')
+
     data['usd_amount'] = settings.default_vol_usd if subtype == 'default' else settings.reverse_vol_usd
     if data['type'] != "error":
         send_webhook(settings, data['symbol'], data, now, user_id)
-
+    if subtype == "reversal":
+        data['exchange'] += "_reversal"
     if settings.tg_id and settings.tg_id > 1000:
         if data['type'] == "pump":
             send_tg_message(settings.tg_id, f"<b>🟢{'🔄' if subtype == 'reversal' else ''} Новый ПАМП {'от ревёрса!' if subtype == 'reversal' else '!'}</b>\n"
