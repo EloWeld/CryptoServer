@@ -39,15 +39,15 @@ def save_prices_to_db(app):
                 global_f_prices = [FuturesPrice(symbol=price['symbol'], price=price['price']) for price in futures_prices]
                 global_s_prices = [SpotPrice(symbol=price['symbol'], price=price['price']) for price in spot_prices]
 
-                session.query(SpotPrice).delete(synchronize_session='evaluate')
-                session.query(FuturesPrice).delete(synchronize_session='evaluate')
-                for price in spot_prices:
-                    session.add(SpotPrice(symbol=price['symbol'], price=price['price']))
-                for price in futures_prices:
-                    session.add(FuturesPrice(symbol=price['symbol'], price=price['price']))
+                # session.query(SpotPrice).delete(synchronize_session='evaluate')
+                # session.query(FuturesPrice).delete(synchronize_session='evaluate')
+                # for price in spot_prices:
+                #     session.add(SpotPrice(symbol=price['symbol'], price=price['price']))
+                # for price in futures_prices:
+                #     session.add(FuturesPrice(symbol=price['symbol'], price=price['price']))
 
-                with lock:
-                    session.commit()
+                # with lock:
+                #     session.commit()
             except Exception as e:
                 loguru.logger.error(f"Error fetching prices from binance: {e} {traceback.format_exc()}")
             time.sleep(2)

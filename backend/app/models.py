@@ -175,12 +175,10 @@ class ChangesLog(db.Model):
 
 @dataclass
 class SpotPrice(db.Model):
-    id: int
     symbol: str
     price: float
     timestamp: datetime.datetime
 
-    id = sa.Column(sa.Integer, primary_key=True)
     symbol = sa.Column(sa.String(50), nullable=False)
     price = sa.Column(sa.Float, nullable=False)
     timestamp = sa.Column(sa.DateTime, default=datetime.datetime.now)
@@ -188,12 +186,10 @@ class SpotPrice(db.Model):
 
 @dataclass
 class FuturesPrice(db.Model):
-    id: int
     symbol: str
     price: float
     timestamp: datetime.datetime
 
-    id = sa.Column(sa.Integer, primary_key=True)
     symbol = sa.Column(sa.String(50), nullable=False)
     price = sa.Column(sa.Float, nullable=False)
     timestamp = sa.Column(sa.DateTime, default=datetime.datetime.now)
