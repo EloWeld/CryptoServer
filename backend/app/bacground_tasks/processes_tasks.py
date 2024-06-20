@@ -1,4 +1,5 @@
 from copy import deepcopy
+import datetime
 import threading
 from flask import Flask, current_app
 from app import socketio
@@ -15,9 +16,13 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 import time
 import traceback
 
+global_f_prices = []
+global_s_prices = []
+
 
 def save_prices_to_db(app):
-
+    global global_f_prices
+    global global_s_prices
     with app.app_context():
         engine = db.get_engine()
         Session = scoped_session(sessionmaker(bind=engine))
@@ -26,6 +31,13 @@ def save_prices_to_db(app):
             try:
                 spot_prices = get_spot_prices()
                 futures_prices = get_futures_prices()
+                # for x in futures_prices:
+                #     ts = x['time'] / 1000 // 60
+                #     ns = datetime.datetime.now().timestamp() // 60
+                #     if ts != ns:
+                #         print(x['symbol'], ts, ns)
+                global_f_prices = [FuturesPrice(symbol=price['symbol'], price=price['price']) for price in futures_prices]
+                global_s_prices = [SpotPrice(symbol=price['symbol'], price=price['price']) for price in spot_prices]
 
                 session.query(SpotPrice).delete(synchronize_session='evaluate')
                 session.query(FuturesPrice).delete(synchronize_session='evaluate')
@@ -59,14 +71,14 @@ def process_function(app: Flask, user_id):
             socketio.emit('log', {'data': f'Process started for user {user_id}.'}, room=user_id)
             process = session.query(ParsingProcess).filter(ParsingProcess.user_id == user.id, ParsingProcess.status == "active").first()
             while process is not None:
-                process = session.query(ParsingProcess).filter(ParsingProcess.user_id == user.id, ParsingProcess.status == "active").first()
-                us: Settings = session.query(Settings).filter(Settings.user_id == user.id).first()
+                with lock:
+                    process = session.query(ParsingProcess).filter(ParsingProcess.user_id == user.id, ParsingProcess.status == "active").first()
+                    us: Settings = session.query(Settings).filter(Settings.user_id == user.id).first()
                 if us.use_spot:
-                    prices = session.query(SpotPrice).all()
+                    prices = global_s_prices
                 else:
-                    prices = session.query(FuturesPrice).all()
-                prices_copy = deepcopy(prices)  # Создание копии объекта
-                for price in prices_copy:
+                    prices = global_f_prices
+                for price in prices:
                     try:
                         update_price(us, price, user_id)
                     except Exception as e:
