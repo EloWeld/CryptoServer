@@ -203,9 +203,13 @@ function Charts({ isAuthenticated, setIsAuthenticated }) {
 
                         // ———————————————— PRICE ———————————————— //
                         const firstPrice = response.data['price'][0][1];
+                        // const priceData = response.data['price'].map(item => ({
+                        //     time: adjustTime(item[0]),
+                        //     value: ((item[1] - firstPrice) / firstPrice) * 100 // Процентное изменение
+                        // }));
                         const priceData = response.data['price'].map(item => ({
                             time: adjustTime(item[0]),
-                            value: ((item[1] - firstPrice) / firstPrice) * 100 // Процентное изменение
+                            value: item[1]
                         }));
                         // Maybe in future
                         const N = 1
