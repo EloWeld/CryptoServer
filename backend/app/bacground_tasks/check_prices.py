@@ -56,6 +56,10 @@ def check_prices():
                 if datetime.datetime.now() - log.created_at > datetime.timedelta(minutes=settings.max_save_minutes):
                     continue
 
+                # If no reverse_last_order_dist is settings
+                if not settings.reverse_last_order_dist:
+                    continue
+
                 curr_user_prices = price_history[log.user_id][log.symbol]
                 logged_price = log.curr_price
                 curr_price = curr_user_prices[-1][-1]
