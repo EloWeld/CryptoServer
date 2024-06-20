@@ -30,8 +30,11 @@ def coin_chart(coin: str):
         return jsonify({"message": "NO_PROCESS"}), 200
 
     user_price_history = price_history.get(current_user.id, None)
+    print(user_price_history)
     if user_price_history is None:
         return jsonify({"message": "NO_PRICE_HISTORY"}), 200
+    if coin not in user_price_history:
+        return jsonify({"message": "NO_COIN_PRICE_HISTORY"}), 200
     symbol_history = user_price_history[coin]
     if symbol_history is None:
         return jsonify({"message": "NO_COIN_PRICE_HISTORY"}), 200
