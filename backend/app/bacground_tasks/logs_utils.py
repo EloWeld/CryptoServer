@@ -73,10 +73,10 @@ def send_webhook(settings: Settings, symbol, data, minute, user_id):
             data_template: str = settings.reverse_smooth_pump_data if data['type'] == 'pump' else settings.reverse_smooth_dump_data
         else:
             data_template: str = settings.smooth_pump_data if data['type'] == 'pump' else settings.smooth_dump_data
-
-    data = data_template.replace('{{ticker}}', symbol)
-    if 'usd_amount' in data:
-        data = data_template.replace('{{volume_usd}}', data['usd_amount'])
+    if data_template:
+        data = data_template.replace('{{ticker}}', symbol)
+        if 'usd_amount' in data:
+            data = data_template.replace('{{volume_usd}}', data['usd_amount'])
 
     # 6
     try:
