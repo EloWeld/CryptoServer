@@ -7,6 +7,7 @@ from app.bacground_tasks.base import connect_to_db
 from app import socketio
 from sqlalchemy import func, desc
 from sqlalchemy.orm import aliased
+from sqlalchemy.exc import SQLAlchemyError
 
 import threading
 
@@ -85,6 +86,9 @@ def check_prices(app):
                             continue
                         send_reverse_webhook(settings, log.symbol, curr_price, 'pump', logged_price, (threshold_price - logged_price) / logged_price * 100, exchange=log.exchange)
                 time.sleep(5)  # Частота проверки
+            except SQLAlchemyError as e:
+                print(f"Ошибка базы данных: {e}")
+                session.rollback()
             except Exception as err:
                 loguru.logger.error(f"Error on check prices {err} {traceback.format_exc()}")
 

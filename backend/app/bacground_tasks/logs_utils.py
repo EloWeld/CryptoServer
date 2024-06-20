@@ -1,12 +1,14 @@
 from app.bacground_tasks.base import webhook_data
 from app.models import ChangesLog, Settings, db
 from app.utils import datetime, loguru, requests, send_tg_message, time
+from sqlalchemy.exc import SQLAlchemyError
 
 
 def add_journal(data: dict, settings: Settings, user_id: str | int):
     loguru.logger.info(str(data) + f" {user_id}")
     # Чтение существующего журнала
     change_log: list[ChangesLog] = ChangesLog.query.filter(ChangesLog.user_id == user_id)
+
     # Проверка на дублирование
     nowd = datetime.datetime.now()
     now = (int(nowd.timestamp()) // 60) * 60
