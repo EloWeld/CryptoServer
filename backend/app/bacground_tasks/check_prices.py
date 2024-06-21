@@ -48,6 +48,8 @@ def check_prices(app):
                     results = lastlogs.all()
 
                 for log in results:
+                    if log.curr_price is None:
+                        continue
                     if log.user_id not in price_history:
                         continue
                     if log.symbol not in price_history[log.user_id]:
@@ -167,14 +169,16 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
             loguru.logger.error(err_msg)
             socketio.emit('log', {'data': err_msg}, room=username)
 
-    if len(price_history[settings.user_id][symbol]) > RAPID_CHECK_MINUTES:
+    if len(price_history[settings.user_id][symbol]) > RAPID_CHECK_MINUTES + 1:
         change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(price_history[settings.user_id][symbol], RAPID_CHECK_MINUTES)
         if change_amount_pump >= RAPID_PRICE_CHANGE and settings.rapid_enable_pump:
+            loguru.logger.debug(f"Price history before: {price_history[settings.user_id][symbol]}")
             log_and_journal(symbol, change_amount_pump, "pump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
         if change_amount_dump >= RAPID_PRICE_CHANGE and settings.rapid_enable_dump:
+            loguru.logger.debug(f"Price history before: {price_history[settings.user_id][symbol]}")
             log_and_journal(symbol, change_amount_dump, "dump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
 
-    if len(price_history[settings.user_id][symbol]) > SMOOTH_CHECK_MINUTES:
+    if len(price_history[settings.user_id][symbol]) > SMOOTH_CHECK_MINUTES + 1:
         change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(
             price_history[settings.user_id][symbol], SMOOTH_CHECK_MINUTES)
         if change_amount_pump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_pump:

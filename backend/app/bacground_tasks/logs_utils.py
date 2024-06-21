@@ -54,7 +54,7 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
                               symbol=data.get('symbol', None),
                               type=data.get('type', None),
                               mode=data.get('mode', None),
-                              change_amount=data.get('change_amount', None),
+                              change_amount=str(data.get('change_amount', None)),
                               interval=data.get('interval', None),
                               created_at=datetime.datetime.now(),
                               old_price=data.get('old_price', None),

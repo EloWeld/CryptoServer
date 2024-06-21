@@ -103,8 +103,8 @@ def manage_settings():
         settings.reverse_multiplier = data.get('reverse_multiplier', settings.reverse_multiplier)
         settings.reverse_density = data.get('reverse_density', settings.reverse_density)
 
-        settings.check_per_minutes_rapid = data.get('check_per_minutes_rapid', 1)
-        settings.check_per_minutes_smooth = data.get('check_per_minutes_smooth', 3)
+        settings.check_per_minutes_rapid = int(data.get('check_per_minutes_rapid', 1))
+        settings.check_per_minutes_smooth = int(data.get('check_per_minutes_smooth', 3))
         settings.rapid_delay = data.get('rapid_delay', 3)
         settings.smooth_delay = data.get('smooth_delay', 3)
 
