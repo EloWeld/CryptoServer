@@ -161,11 +161,11 @@ class ChangesLog(db.Model):
 
     id = sa.Column(sa.Integer, primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id'), nullable=False)
-    exchange = sa.Column(sa.String(50), nullable=True)
+    exchange = sa.Column(sa.String(255), nullable=True)
     symbol = sa.Column(sa.String(50), nullable=True)
-    type = sa.Column(sa.String(10), nullable=True)  # pump or dump
-    mode = sa.Column(sa.String(20), nullable=True)
-    change_amount = sa.Column(sa.String(10), nullable=True)
+    type = sa.Column(sa.String(255), nullable=True)  # pump or dump
+    mode = sa.Column(sa.String(255), nullable=True)
+    change_amount = sa.Column(sa.String(255), nullable=True)
     interval = sa.Column(sa.Integer, nullable=True)
     old_price = sa.Column(sa.Float, nullable=True)
     curr_price = sa.Column(sa.Float, nullable=True)
