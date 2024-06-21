@@ -54,8 +54,8 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
         if count > limit:
             oldest_entries = ChangesLog.query.order_by(ChangesLog.created_at).limit(count - limit).all()
             for entry in oldest_entries:
-                ChangesLog.query.delete(entry)
-            ChangesLog.query.commit()
+                db.session.delete(entry)
+            db.session.commit()
     ensure_limit_changes_log()
 
     db.session.add(ChangesLog(user_id=user_id,
