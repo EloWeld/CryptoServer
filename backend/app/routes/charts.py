@@ -16,7 +16,11 @@ last_hook_time = {}
 @login_required
 def coins():
     settings = db.session.query(Settings).filter(Settings.user_id == current_user.id).first()
-    coins: list[str] = get_binance_spot_symbols() if settings.use_spot else get_binance_future_symbols()
+    process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == current_user.id, ParsingProcess.status == "active").first()
+    if process:
+        coins = list(price_history[current_user.id].keys())
+    else:
+        coins: list[str] = get_binance_spot_symbols() if settings.use_spot else get_binance_future_symbols()
     if settings.use_only_usdt:
         coins = [x for x in coins if x.endswith('USDT')]
     return jsonify([{"id": x, "name": x} for x in coins]), 200
