@@ -49,6 +49,15 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
             send_tg_message(settings.tg_id, f"<b>⚠️ Странное поведение!</b>\n"
                             f"Данные: <code>{data}</code>")
 
+    def ensure_limit_changes_log(limit=10000):
+        count = ChangesLog.query.count()
+        if count > limit:
+            oldest_entries = ChangesLog.query.order_by(ChangesLog.created_at).limit(count - limit).all()
+            for entry in oldest_entries:
+                ChangesLog.query.delete(entry)
+            ChangesLog.query.commit()
+    ensure_limit_changes_log()
+
     db.session.add(ChangesLog(user_id=user_id,
                               exchange=data.get('exchange', None),
                               symbol=data.get('symbol', None),
