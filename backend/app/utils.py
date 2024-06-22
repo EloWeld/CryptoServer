@@ -91,6 +91,9 @@ def get_cvd(symbol, limit):
 
         lm = cvd[-1][0] if cvd else 0
         for trade in trades:
+            if isinstance(trade, str):
+                loguru.logger.error(f"CVD is STR, trades: {trades}")
+                continue
             cm = trade['T'] // 1000 // 60
             curr_cvd = float(trade['q']) if trade['m'] else -float(trade['q'])
             if lm != cm:
