@@ -30,11 +30,12 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
     if subtype == "reversal":
         data['exchange'] += "_reversal"
     if settings.tg_id and settings.tg_id > 1000:
+        change_amount = f"{data['change_amount']:.2f}"
         if data['type'] == "pump":
             send_tg_message(settings.tg_id, f"<b>🟢{'🔄' if subtype == 'reversal' else ''} Новый ПАМП {'от ревёрса!' if subtype == 'reversal' else '!'}</b>\n"
                             f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
                             f"🎯 Режим: <code>{data['exchange']}</code>\n"
-                            f"📈 Изменение: <code>{data['change_amount']:.2f}</code> за <code>{data['interval']}</code> минут(-ы)\n"
+                            f"📈 Изменение: <code>{change_amount}</code> за <code>{data['interval']}</code> минут(-ы)\n"
                             f"🌐 Сайт: {settings.domain}\n"
                             f"📣 Сигналов за сутки: {len([x for x in last_logs if x.created_at > datetime.datetime(nowd.year, nowd.month, nowd.day)])}")
 
@@ -42,7 +43,7 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
             send_tg_message(settings.tg_id, f"<b>🔴{'🔄' if subtype == 'reversal' else ''} Новый ДАМП {'от ревёрса!' if subtype == 'reversal' else '!'}!</b>\n"
                             f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
                             f"🎯 Режим: <code>{data['exchange']}</code>\n"
-                            f"📉 Изменение: <code>-{data['change_amount']:.2f}</code> за <code>{data['interval']}</code> минут(-ы)\n"
+                            f"📉 Изменение: <code>-{change_amount}</code> за <code>{data['interval']}</code> минут(-ы)\n"
                             f"🌐 Сайт: {settings.domain}\n"
                             f"📣 Сигналов за сутки: {len([x for x in last_logs if x.created_at > datetime.datetime(nowd.year, nowd.month, nowd.day)])}")
         else:

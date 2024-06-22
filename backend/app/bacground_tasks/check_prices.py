@@ -81,14 +81,14 @@ def check_prices(app):
                             continue
                         if "smooth" in log.exchange and not settings.reverse_smooth_enable_pump:
                             continue
-                        send_reverse_webhook(settings, log.symbol, curr_price, 'dump', logged_price, (threshold_price - logged_price) / logged_price * 100, exchange=log.exchange)
+                        send_reverse_webhook(settings, log.symbol, curr_price, 'dump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=log.exchange)
                     elif log.type == 'dump' and curr_price >= threshold_price:
                         # Filter enable flags
                         if "rapid" in log.exchange and not settings.reverse_rapid_enable_dump:
                             continue
                         if "smooth" in log.exchange and not settings.reverse_smooth_enable_dump:
                             continue
-                        send_reverse_webhook(settings, log.symbol, curr_price, 'pump', logged_price, (threshold_price - logged_price) / logged_price * 100, exchange=log.exchange)
+                        send_reverse_webhook(settings, log.symbol, curr_price, 'pump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=log.exchange)
                 time.sleep(5)  # Частота проверки
             except SQLAlchemyError as e:
                 print(f"Ошибка базы данных: {e}")
