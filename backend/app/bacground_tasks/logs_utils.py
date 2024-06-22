@@ -6,21 +6,21 @@ from sqlalchemy.exc import SQLAlchemyError
 
 def add_journal(data: dict, settings: Settings, user_id: str | int):
     loguru.logger.info(str(data) + f" {user_id}")
-    # Чтение существующего журнала
-    change_log: list[ChangesLog] = ChangesLog.query.filter(ChangesLog.user_id == user_id)
+    # Чтение существующего журнала, последние 10 элементов для юзера
+    last_logs: list[ChangesLog] = ChangesLog.query.filter(ChangesLog.user_id == user_id).order_by(ChangesLog.created_at.desc()).limit(300)
 
     # Проверка на дублирование
     nowd = datetime.datetime.now()
     now = (int(nowd.timestamp()) // 60) * 60
-    for log_entry in change_log:
-        delay = 3
+    delay = 3
+    for log_entry in last_logs:
         if 'exchange' in data:
-            if data['exchange'] == "rapid":
+            if "rapid" in data['exchange']:
                 delay = settings.rapid_delay
-            elif data['exchange'] == "smooth":
-                delay = settings.rapid_delay
+            elif "smooth" in data['exchange']:
+                delay = settings.smooth_delay
 
-        if log_entry.symbol == data["symbol"] and log_entry.type == data["type"] and datetime.datetime.now() - log_entry.created_at < datetime.timedelta(minutes=delay):
+        if log_entry.symbol == data["symbol"] and datetime.datetime.now() - log_entry.created_at < datetime.timedelta(minutes=delay):
             return  # Запись уже существует, не добавляем дубликат
     subtype = data.get('subtype', 'default')
 
@@ -34,17 +34,17 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
             send_tg_message(settings.tg_id, f"<b>🟢{'🔄' if subtype == 'reversal' else ''} Новый ПАМП {'от ревёрса!' if subtype == 'reversal' else '!'}</b>\n"
                             f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
                             f"🎯 Режим: <code>{data['exchange']}</code>\n"
-                            f"📈 Изменение: <code>{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
+                            f"📈 Изменение: <code>{data['change_amount']:.2f}</code> за <code>{data['interval']}</code> минут(-ы)\n"
                             f"🌐 Сайт: {settings.domain}\n"
-                            f"📣 Сигналов за сутки: {len([x for x in change_log if x.created_at > datetime.datetime(nowd.year, nowd.month, nowd.day)])}")
+                            f"📣 Сигналов за сутки: {len([x for x in last_logs if x.created_at > datetime.datetime(nowd.year, nowd.month, nowd.day)])}")
 
         elif data['type'] == "dump":
             send_tg_message(settings.tg_id, f"<b>🔴{'🔄' if subtype == 'reversal' else ''} Новый ДАМП {'от ревёрса!' if subtype == 'reversal' else '!'}!</b>\n"
                             f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
                             f"🎯 Режим: <code>{data['exchange']}</code>\n"
-                            f"📉 Изменение: <code>-{data['change_amount']}</code> за <code>{data['interval']}</code> минут(-ы)\n"
+                            f"📉 Изменение: <code>-{data['change_amount']:.2f}</code> за <code>{data['interval']}</code> минут(-ы)\n"
                             f"🌐 Сайт: {settings.domain}\n"
-                            f"📣 Сигналов за сутки: {len([x for x in change_log if x.created_at > datetime.datetime(nowd.year, nowd.month, nowd.day)])}")
+                            f"📣 Сигналов за сутки: {len([x for x in last_logs if x.created_at > datetime.datetime(nowd.year, nowd.month, nowd.day)])}")
         else:
             send_tg_message(settings.tg_id, f"<b>⚠️ Странное поведение!</b>\n"
                             f"Данные: <code>{data}</code>")
