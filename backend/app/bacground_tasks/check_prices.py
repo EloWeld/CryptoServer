@@ -182,6 +182,7 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
         current_price = prices[-1][1]
         change_amount_pump = (current_price - min_price) / min_price * 100
         change_amount_dump = (max_price - current_price) / max_price * 100
+        loguru.logger.info(change_amount_pump, change_amount_dump, prices)
         return change_amount_pump, change_amount_dump, min_price, max_price
 
     def log_and_journal(symbol, change_amount, change_type, mode, min_price, max_price, interval, current_price):
