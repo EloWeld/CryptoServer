@@ -161,9 +161,11 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
     def calculate_changes(prices, interval):
         # (-int+1) because [-1] is the current price
         old_price = prices[-1][1]
+        old_price_found = False
         for pr in prices[::-1]:
             if pr[0] == curr_minute - interval:
                 old_price = pr[1]
+                old_price_found = True
                 break
         if settings.use_wicks:
             prs = []
@@ -175,6 +177,7 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
             if len(prs) == 0:
                 min_price = max_price = 0
             else:
+
                 min_price = min(prs)
                 max_price = max(prs)
         else:
@@ -182,7 +185,8 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
         current_price = prices[-1][1]
         change_amount_pump = (current_price - min_price) / min_price * 100
         change_amount_dump = (max_price - current_price) / max_price * 100
-        loguru.logger.info(change_amount_pump, change_amount_dump, prices)
+        if not old_price_found:
+            loguru.logger.error(f" Old price not found {change_amount_pump}, {change_amount_dump}, {prices}")
         return change_amount_pump, change_amount_dump, min_price, max_price
 
     def log_and_journal(symbol, change_amount, change_type, mode, min_price, max_price, interval, current_price):
