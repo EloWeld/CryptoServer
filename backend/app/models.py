@@ -159,7 +159,7 @@ class ChangesLog(db.Model):
     created_at: datetime
     additional_data: dict
 
-    id = sa.Column(sa.Integer, primary_key=True)
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id'), nullable=False)
     exchange = sa.Column(sa.String(255), nullable=True)
     symbol = sa.Column(sa.String(50), nullable=True)
