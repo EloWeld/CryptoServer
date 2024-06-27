@@ -20,7 +20,6 @@ def get_user_pos(user_id):
     global last_positions_story
     if user_id not in last_positions_story:
         last_positions_story[user_id] = []
-    print(last_positions_story[user_id])
     return last_positions_story[user_id]
 
 
@@ -186,11 +185,12 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
         change_amount_pump = (current_price - min_price) / min_price * 100
         change_amount_dump = (max_price - current_price) / max_price * 100
         if not old_price_found:
-            loguru.logger.error(f" Old price not found {change_amount_pump}, {change_amount_dump}, {prices}")
+            loguru.logger.error(f" Old price not found, curr minute {curr_minute}, interval is {interval}, pump/dumps {change_amount_pump}, {change_amount_dump}, {prices}")
         return change_amount_pump, change_amount_dump, min_price, max_price
 
     def log_and_journal(symbol, change_amount, change_type, mode, min_price, max_price, interval, current_price):
-        loguru.logger.success(f"{symbol} price {change_type.upper()} by {change_amount:.2f}% over the last {interval} minutes; Datetime: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        loguru.logger.success(f"mode {mode}, {symbol} price {change_type.upper()} by {change_amount:.2f}%" +
+                              " over the last {interval} minutes; Datetime: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         s_data = {
             "exchange": "rapid" if mode == "price" else "smooth",
             "symbol": symbol,
