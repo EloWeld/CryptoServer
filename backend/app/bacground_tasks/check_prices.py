@@ -16,6 +16,13 @@ from app.models import ChangesLog, FuturesPrice, ParsingProcess, Settings
 from app.utils import datetime, get_cvd_change, get_oi_candles_minutes, get_volumes_change, loguru, time
 
 
+def get_user_pos(user_id):
+    global last_positions_story
+    if user_id not in last_positions_story:
+        return []
+    return last_positions_story[user_id]
+
+
 def add_last_position(user_id, position):
     global last_positions_story
     if user_id not in last_positions_story:
@@ -78,7 +85,7 @@ def check_prices(app):
                     if not settings.reverse_last_order_dist:
                         continue
 
-                    if (f"{log.symbol}_rev_dump" in last_positions_story[settings.user_id]) or (f"{log.symbol}_rev_pump" in last_positions_story[settings.user_id]):
+                    if (f"{log.symbol}_rev_dump" in get_user_pos(settings.user_id)) or (f"{log.symbol}_rev_pump" in get_user_pos(settings.user_id)):
                         continue
 
                     curr_user_prices = price_history[log.user_id][log.symbol]
@@ -198,11 +205,11 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
 
     if len(price_history[settings.user_id][symbol]) >= RAPID_CHECK_MINUTES + 1:
         change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(price_history[settings.user_id][symbol], RAPID_CHECK_MINUTES)
-        if change_amount_pump >= RAPID_PRICE_CHANGE and settings.rapid_enable_pump and f"{symbol}_rapid_pump" not in last_positions_story[settings.user_id]:
+        if change_amount_pump >= RAPID_PRICE_CHANGE and settings.rapid_enable_pump and f"{symbol}_rapid_pump" not in get_user_pos(settings.user_id):
             loguru.logger.debug(f"Price history before: {price_history[settings.user_id][symbol]}")
             log_and_journal(symbol, change_amount_pump, "pump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
             add_last_position(settings.user_id, f"{symbol}_rapid_pump", )
-        if change_amount_dump >= RAPID_PRICE_CHANGE and settings.rapid_enable_dump and f"{symbol}_rapid_dump" not in last_positions_story[settings.user_id]:
+        if change_amount_dump >= RAPID_PRICE_CHANGE and settings.rapid_enable_dump and f"{symbol}_rapid_dump" not in get_user_pos(settings.user_id):
             loguru.logger.debug(f"Price history before: {price_history[settings.user_id][symbol]}")
             log_and_journal(symbol, change_amount_dump, "dump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
             add_last_position(settings.user_id, f"{symbol}_rapid_dump", )
@@ -210,7 +217,7 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
     if len(price_history[settings.user_id][symbol]) > SMOOTH_CHECK_MINUTES + 1:
         change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(
             price_history[settings.user_id][symbol], SMOOTH_CHECK_MINUTES)
-        if change_amount_pump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_pump and f"{symbol}_smooth_pump" not in last_positions_story[settings.user_id]:
+        if change_amount_pump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_pump and f"{symbol}_smooth_pump" not in get_user_pos(settings.user_id):
             oi = sorted(get_oi_candles_minutes(symbol, max(2, SMOOTH_CHECK_MINUTES)), key=lambda x: x[0])
             oi_values = [float(x[1]) for x in oi]
             oi_change = (oi_values[-1] - oi_values[0]) / oi_values[0] * 100
@@ -222,7 +229,7 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
                     log_and_journal(symbol, change_amount_pump, "pump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
                     add_last_position(settings.user_id, f"{symbol}_smooth_pump")
 
-        if change_amount_dump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_dump and f"{symbol}_smooth_dump" not in last_positions_story[settings.user_id]:
+        if change_amount_dump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_dump and f"{symbol}_smooth_dump" not in get_user_pos(settings.user_id):
             oi = sorted(get_oi_candles_minutes(symbol, max(2, SMOOTH_CHECK_MINUTES)), key=lambda x: x[0])
             oi_values = [float(x[1]) for x in oi]
             oi_change = (oi_values[-1] - oi_values[0]) / oi_values[0] * 100
