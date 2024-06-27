@@ -30,7 +30,7 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
     if subtype == "reversal":
         data['exchange'] += "_reversal"
     if settings.tg_id and settings.tg_id > 1000:
-        ca = data['change_amount'] if 'change_amount' in data else 'unknown'
+        ca = str(data['change_amount'])[:5] if 'change_amount' in data else 'unknown'
         if data['type'] == "pump":
             send_tg_message(settings.tg_id, f"<b>🟢{'🔄' if subtype == 'reversal' else ''} Новый ПАМП {'от ревёрса!' if subtype == 'reversal' else '!'}</b>\n"
                             f"🪙 Монета: <code>{data['symbol']}</code> <a href='https://www.coinglass.com/tv/Binance_{data['symbol']}'>ССЫЛКА</a>\n"
@@ -64,7 +64,7 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
                               symbol=data.get('symbol', None),
                               type=data.get('type', None),
                               mode=data.get('mode', None),
-                              change_amount=str(data.get('change_amount', None)),
+                              change_amount=str(data.get('change_amount', None))[:4],
                               interval=data.get('interval', None),
                               created_at=datetime.datetime.now(),
                               old_price=data.get('old_price', None),

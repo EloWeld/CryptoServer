@@ -186,18 +186,18 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
             oi_values = [float(x[1]) for x in oi]
             oi_change = (oi_values[-1] - oi_values[0]) / oi_values[0] * 100
             if abs(oi_change) > COI:
-                cvd_change = get_cvd_change(symbol, SMOOTH_CHECK_MINUTES+1)
-                if cvd_change > CCVD:
-                    volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)
-                    if volumes_change > CVVC:
-                        log_and_journal(symbol, change_amount_pump, "pump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
+                # cvd_change = get_cvd_change(symbol, SMOOTH_CHECK_MINUTES+1)
+                # if cvd_change > CCVD:
+                volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)
+                if volumes_change > CVVC:
+                    log_and_journal(symbol, change_amount_pump, "pump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
         if change_amount_dump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_dump:
             oi = sorted(get_oi_candles_minutes(symbol, max(2, SMOOTH_CHECK_MINUTES)), key=lambda x: x[0])
             oi_values = [float(x[1]) for x in oi]
             oi_change = (oi_values[-1] - oi_values[0]) / oi_values[0] * 100
             if abs(oi_change) > COI:
-                cvd_change = get_cvd_change(symbol, SMOOTH_CHECK_MINUTES+1)
-                if -cvd_change > CCVD:
-                    volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)
-                    if -volumes_change > CVVC:
-                        log_and_journal(symbol, change_amount_dump, "dump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
+                # cvd_change = get_cvd_change(symbol, SMOOTH_CHECK_MINUTES+1)
+                # if -cvd_change > CCVD:
+                volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)
+                if -volumes_change > CVVC:
+                    log_and_journal(symbol, change_amount_dump, "dump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
