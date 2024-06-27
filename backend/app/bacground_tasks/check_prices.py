@@ -19,7 +19,8 @@ from app.utils import datetime, get_cvd_change, get_oi_candles_minutes, get_volu
 def get_user_pos(user_id):
     global last_positions_story
     if user_id not in last_positions_story:
-        return []
+        last_positions_story[user_id] = []
+    print(last_positions_story[user_id])
     return last_positions_story[user_id]
 
 
