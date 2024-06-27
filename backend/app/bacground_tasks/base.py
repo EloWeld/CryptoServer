@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 webhook_data = {}
 price_history = {}
+last_positions_story = {}
 process_threads = {}
 process_running = {}
 lock = threading.Lock()

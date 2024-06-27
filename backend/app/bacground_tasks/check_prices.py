@@ -1,7 +1,7 @@
 import traceback
 
 from flask import current_app
-from app.bacground_tasks.base import get_settings, lock, price_history, webhook_data
+from app.bacground_tasks.base import get_settings, lock, price_history, webhook_data, last_positions_story
 from app.bacground_tasks.logs_utils import add_journal, send_reverse_webhook
 from app.bacground_tasks.base import connect_to_db
 from app import socketio
@@ -14,6 +14,15 @@ import threading
 from app.bacground_tasks.math_utils import generate_order_grid
 from app.models import ChangesLog, FuturesPrice, ParsingProcess, Settings
 from app.utils import datetime, get_cvd_change, get_oi_candles_minutes, get_volumes_change, loguru, time
+
+
+def add_last_position(user_id, position):
+    global last_positions_story
+    if user_id not in last_positions_story:
+        last_positions_story[user_id] = []
+    last_positions_story[user_id].append(position)
+    if len(last_positions_story[user_id]) > 5:
+        last_positions_story[user_id].pop(0)
 
 
 def get_threshhold_price(settings: Settings, logged_type: str, logged_price):
@@ -69,6 +78,9 @@ def check_prices(app):
                     if not settings.reverse_last_order_dist:
                         continue
 
+                    if (f"{log.symbol}_rev_dump" in last_positions_story[settings.user_id]) or (f"{log.symbol}_rev_pump" in last_positions_story[settings.user_id]):
+                        continue
+
                     curr_user_prices = price_history[log.user_id][log.symbol]
                     logged_price = log.curr_price
                     curr_price = curr_user_prices[-1][-1]
@@ -82,6 +94,7 @@ def check_prices(app):
                         if "smooth" in log.exchange and not settings.reverse_smooth_enable_pump:
                             continue
                         send_reverse_webhook(settings, log.symbol, curr_price, 'dump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=log.exchange)
+                        add_last_position(settings.user_id, f"{log.symbol}_rev_dump")
                     elif log.type == 'dump' and curr_price >= threshold_price:
                         # Filter enable flags
                         if "rapid" in log.exchange and not settings.reverse_rapid_enable_dump:
@@ -89,6 +102,7 @@ def check_prices(app):
                         if "smooth" in log.exchange and not settings.reverse_smooth_enable_dump:
                             continue
                         send_reverse_webhook(settings, log.symbol, curr_price, 'pump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=log.exchange)
+                        add_last_position(settings.user_id, f"{log.symbol}_rev_pump")
                 time.sleep(5)  # Частота проверки
             except SQLAlchemyError as e:
                 print(f"Ошибка базы данных: {e}")
@@ -138,10 +152,23 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
 
     def calculate_changes(prices, interval):
         # (-int+1) because [-1] is the current price
-        old_price = prices[-(interval+1)][1]
+        old_price = prices[-1][1]
+        for pr in prices[::-1]:
+            if pr[0] == curr_minute - interval:
+                old_price = pr[1]
+                break
         if settings.use_wicks:
-            min_price = min(x[1] for x in prices[-(interval+1):-1])
-            max_price = max(x[1] for x in prices[-(interval+1):-1])
+            prs = []
+            for pr in prices[:-1][::-1]:
+                if pr[0] >= curr_minute - interval:
+                    prs.append(pr[1])
+                else:
+                    break
+            if len(prs) == 0:
+                min_price = max_price = 0
+            else:
+                min_price = min(prs)
+                max_price = max(prs)
         else:
             min_price, max_price = old_price, old_price
         current_price = prices[-1][1]
@@ -169,19 +196,21 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
             loguru.logger.error(err_msg)
             socketio.emit('log', {'data': err_msg}, room=username)
 
-    if len(price_history[settings.user_id][symbol]) > RAPID_CHECK_MINUTES + 1:
+    if len(price_history[settings.user_id][symbol]) >= RAPID_CHECK_MINUTES + 1:
         change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(price_history[settings.user_id][symbol], RAPID_CHECK_MINUTES)
-        if change_amount_pump >= RAPID_PRICE_CHANGE and settings.rapid_enable_pump:
+        if change_amount_pump >= RAPID_PRICE_CHANGE and settings.rapid_enable_pump and f"{symbol}_rapid_pump" not in last_positions_story[settings.user_id]:
             loguru.logger.debug(f"Price history before: {price_history[settings.user_id][symbol]}")
             log_and_journal(symbol, change_amount_pump, "pump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
-        if change_amount_dump >= RAPID_PRICE_CHANGE and settings.rapid_enable_dump:
+            add_last_position(settings.user_id, f"{symbol}_rapid_pump", )
+        if change_amount_dump >= RAPID_PRICE_CHANGE and settings.rapid_enable_dump and f"{symbol}_rapid_dump" not in last_positions_story[settings.user_id]:
             loguru.logger.debug(f"Price history before: {price_history[settings.user_id][symbol]}")
             log_and_journal(symbol, change_amount_dump, "dump", "price", min_price, max_price, RAPID_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
+            add_last_position(settings.user_id, f"{symbol}_rapid_dump", )
 
     if len(price_history[settings.user_id][symbol]) > SMOOTH_CHECK_MINUTES + 1:
         change_amount_pump, change_amount_dump, min_price, max_price = calculate_changes(
             price_history[settings.user_id][symbol], SMOOTH_CHECK_MINUTES)
-        if change_amount_pump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_pump:
+        if change_amount_pump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_pump and f"{symbol}_smooth_pump" not in last_positions_story[settings.user_id]:
             oi = sorted(get_oi_candles_minutes(symbol, max(2, SMOOTH_CHECK_MINUTES)), key=lambda x: x[0])
             oi_values = [float(x[1]) for x in oi]
             oi_change = (oi_values[-1] - oi_values[0]) / oi_values[0] * 100
@@ -191,7 +220,9 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
                 volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)
                 if volumes_change > CVVC:
                     log_and_journal(symbol, change_amount_pump, "pump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
-        if change_amount_dump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_dump:
+                    add_last_position(settings.user_id, f"{symbol}_smooth_pump")
+
+        if change_amount_dump >= SMOOTH_PRICE_CHANGE and settings.smooth_enable_dump and f"{symbol}_smooth_dump" not in last_positions_story[settings.user_id]:
             oi = sorted(get_oi_candles_minutes(symbol, max(2, SMOOTH_CHECK_MINUTES)), key=lambda x: x[0])
             oi_values = [float(x[1]) for x in oi]
             oi_change = (oi_values[-1] - oi_values[0]) / oi_values[0] * 100
@@ -201,3 +232,4 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
                 volumes_change = get_volumes_change(symbol, SMOOTH_CHECK_MINUTES+1)
                 if -volumes_change > CVVC:
                     log_and_journal(symbol, change_amount_dump, "dump", "smooth", min_price, max_price, SMOOTH_CHECK_MINUTES, price_history[settings.user_id][symbol][-1][1])
+                    add_last_position(settings.user_id, f"{symbol}_smooth_dump")

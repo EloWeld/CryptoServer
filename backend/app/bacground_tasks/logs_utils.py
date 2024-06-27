@@ -5,7 +5,6 @@ from sqlalchemy.exc import SQLAlchemyError
 
 
 def add_journal(data: dict, settings: Settings, user_id: str | int):
-    loguru.logger.info(str(data) + f" {user_id}")
     # Чтение существующего журнала, последние 10 элементов для юзера
     last_logs: list[ChangesLog] = ChangesLog.query.filter(ChangesLog.user_id == user_id).order_by(ChangesLog.created_at.desc()).limit(300)
 
@@ -58,6 +57,7 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
                 db.session.delete(entry)
             db.session.commit()
     ensure_limit_changes_log()
+    loguru.logger.info(str(data) + f" {user_id}")
 
     db.session.add(ChangesLog(user_id=user_id,
                               exchange=data.get('exchange', None),
