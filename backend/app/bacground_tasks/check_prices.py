@@ -100,7 +100,7 @@ def check_prices(app):
                             continue
                         if "smooth" in log.exchange and not settings.reverse_smooth_enable_pump:
                             continue
-                        send_reverse_webhook(settings, log.symbol, curr_price, 'dump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=log.exchange)
+                        send_reverse_webhook(settings, log.symbol, curr_price, 'dump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=f'reverse_{log.exchange}')
                         add_last_position(settings.user_id, f"{log.symbol}_rev_dump")
                     elif log.type == 'dump' and curr_price >= threshold_price:
                         # Filter enable flags
@@ -108,7 +108,7 @@ def check_prices(app):
                             continue
                         if "smooth" in log.exchange and not settings.reverse_smooth_enable_dump:
                             continue
-                        send_reverse_webhook(settings, log.symbol, curr_price, 'pump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=log.exchange)
+                        send_reverse_webhook(settings, log.symbol, curr_price, 'pump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=f'reverse_{log.exchange}')
                         add_last_position(settings.user_id, f"{log.symbol}_rev_pump")
                 time.sleep(5)  # Частота проверки
             except SQLAlchemyError as e:
@@ -190,7 +190,7 @@ def update_price(settings: Settings, message: FuturesPrice, username: str | int)
 
     def log_and_journal(symbol, change_amount, change_type, mode, min_price, max_price, interval, current_price):
         loguru.logger.success(f"mode {mode}, {symbol} price {change_type.upper()} by {change_amount:.2f}%" +
-                              " over the last {interval} minutes; Datetime: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                              f" over the last {interval} minutes; Datetime: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         s_data = {
             "exchange": "rapid" if mode == "price" else "smooth",
             "symbol": symbol,

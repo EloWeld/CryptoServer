@@ -12,11 +12,11 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
     nowd = datetime.datetime.now()
     now = (int(nowd.timestamp()) // 60) * 60
     delay = 3
-    for log_entry in last_logs:
+    for log_entry in last_logs[:10]:
         if 'exchange' in data:
-            if "rapid" in data['exchange']:
+            if "rapid" == data['exchange']:
                 delay = settings.rapid_delay
-            elif "smooth" in data['exchange']:
+            elif "smooth" == data['exchange']:
                 delay = settings.smooth_delay
 
         if log_entry.symbol == data["symbol"] and datetime.datetime.now() - log_entry.created_at < datetime.timedelta(minutes=delay):
@@ -73,26 +73,29 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
 
 
 def send_webhook(settings: Settings, symbol, data, minute, user_id):
-    if data['exchange'] == "rapid":
+    data_template = None
+    if "rapid" in data['exchange']:
         url = settings.rapid_pump_webhook if data['type'] == 'pump' else settings.rapid_dump_webhook
         if 'subtype' in data and data['subtype'] == "reversal":
             data_template: str = settings.reverse_rapid_pump_data if data['type'] == 'pump' else settings.reverse_rapid_dump_data
         else:
             data_template: str = settings.rapid_pump_data if data['type'] == 'pump' else settings.rapid_dump_data
-    elif data['exchange'] == "smooth":
+    elif "smooth" in data['exchange']:
         url = settings.smooth_pump_webhook if data['type'] == 'pump' else settings.smooth_dump_webhook
         if 'subtype' in data and data['subtype'] == "reversal":
             data_template: str = settings.reverse_smooth_pump_data if data['type'] == 'pump' else settings.reverse_smooth_dump_data
         else:
             data_template: str = settings.smooth_pump_data if data['type'] == 'pump' else settings.smooth_dump_data
+            
     if data_template:
-        data = data_template.replace('{{ticker}}', symbol)
+        data_for_send = data_template.replace('{{ticker}}', symbol)
         if 'usd_amount' in data:
-            data = data_template.replace('{{volume_usd}}', data['usd_amount'])
-
+            data_for_send = data_for_send.replace('{{volume_usd}}', str(data['usd_amount']))
+    else:
+        loguru.logger.error(f"Not data template! {data_template}")
     # 6
     try:
-        r = requests.post(url, headers={'Content-Type': "application/json"}, data=data)
+        r = requests.post(url, headers={'Content-Type': "application/json"}, data=data_for_send)
         if r.status_code != 200:
             add_journal({"type": "error", "message": "Не смог отправить вебхук", "detailed": r.text,
                         "symbol": symbol, "created_at": datetime.datetime.now()}, settings, user_id)
