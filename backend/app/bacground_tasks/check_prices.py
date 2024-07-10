@@ -92,7 +92,8 @@ def check_prices(app):
                     logged_price = log.curr_price
                     curr_price = curr_user_prices[-1][-1]
                     threshold_price = get_threshhold_price(settings, log.type, logged_price)
-
+                    if log.type == 'dump' and threshold_price < logged_price:
+                        threshold_price = logged_price + (logged_price-threshold_price)
                     # Creates reversal position of pump and otherwise
                     if log.type == 'pump' and curr_price <= threshold_price:
                         # Filter enable flags
