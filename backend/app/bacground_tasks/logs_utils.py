@@ -11,8 +11,9 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
     # Проверка на дублирование
     nowd = datetime.datetime.now()
     now = (int(nowd.timestamp()) // 60) * 60
-    delay = 3
+    delay = 1
     for log_entry in last_logs[:10]:
+        delay = 1
         if 'exchange' in data:
             if "rapid" == data['exchange']:
                 delay = settings.rapid_delay
