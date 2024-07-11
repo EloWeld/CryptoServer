@@ -111,25 +111,28 @@ def check_prices(app):
                     logged_price = log.curr_price
                     curr_price = curr_user_prices[-1][-1]
                     threshold_price = get_threshhold_price(settings, log.type, logged_price)
-                    if log.type == 'dump' and threshold_price < logged_price:
-                        threshold_price = logged_price + (logged_price-threshold_price)
+                    
+                    if log.type == "pump":
+                        threshold_price = logged_price + (logged_price - threshold_price)
+                        
+                        
                     # Creates reversal position of pump and otherwise
-                    if log.type == 'pump' and curr_price <= threshold_price:
+                    if log.type == 'pump' and curr_price >= threshold_price:
                         # Filter enable flags
                         if "rapid" in log.exchange and not settings.reverse_rapid_enable_pump:
                             continue
                         if "smooth" in log.exchange and not settings.reverse_smooth_enable_pump:
                             continue
-                        send_reverse_webhook(settings, log.symbol, curr_price, 'dump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=f'reverse_{log.exchange}')
-                        add_last_position(settings.user_id, f"{log.symbol}_rev_dump")
-                    elif log.type == 'dump' and curr_price >= threshold_price:
+                        send_reverse_webhook(settings, log.symbol, curr_price, 'pump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=f'reverse_{log.exchange}')
+                        add_last_position(settings.user_id, f"{log.symbol}_rev_pump")
+                    elif log.type == 'dump' and curr_price <= threshold_price:
                         # Filter enable flags
                         if "rapid" in log.exchange and not settings.reverse_rapid_enable_dump:
                             continue
                         if "smooth" in log.exchange and not settings.reverse_smooth_enable_dump:
                             continue
-                        send_reverse_webhook(settings, log.symbol, curr_price, 'pump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=f'reverse_{log.exchange}')
-                        add_last_position(settings.user_id, f"{log.symbol}_rev_pump")
+                        send_reverse_webhook(settings, log.symbol, curr_price, 'dump', logged_price, (threshold_price - curr_price) / curr_price * 100, exchange=f'reverse_{log.exchange}')
+                        add_last_position(settings.user_id, f"{log.symbol}_rev_dump")
                 time.sleep(5)  # Частота проверки
             except SQLAlchemyError as e:
                 print(f"Ошибка базы данных: {e}")
