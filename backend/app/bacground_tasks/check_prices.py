@@ -79,7 +79,7 @@ def check_prices(app):
                     # Пример для получения результатов
                     results = lastlogs.all()
 
-                if results and random.randint(0, 1000) < 2:
+                if results and random.randint(0, 100) < 2:
                     print('Yeah, we have results for check prices')
                 for log in results:
                     if log.curr_price is None:

@@ -21,33 +21,46 @@ processes_bp = Blueprint('processes', __name__)
 @login_required
 def start_process():
     user_id = current_user.id
-    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id, ParsingProcess.status == "active").first()
-    if running_process is not None:
-        return jsonify({'status': 'Process already running'})
-
+    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id).first()
     if running_process is None:
         db.session.add(ParsingProcess(user_id=user_id, status="active"))
         db.session.commit()
-        app = current_app._get_current_object()  # Wattafock? Works! Magick!
-        process_thread = threading.Thread(target=process_function, args=(app, user_id,))
-        process_threads[user_id] = process_thread
-        process_thread.start()
-        return jsonify({'status': 'Process started'})
+        running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id).first()
+    
+    # Остановим процесс если есть
+    if user_id in process_threads:
+        process_threads[user_id].join()
+        try:
+            del process_threads[user_id]
+        except Exception as e:
+            loguru.logger.error(str(e))
+    # И сделаем новый
+    app = current_app._get_current_object()  # Wattafock? Works! Magick!
+    process_thread = threading.Thread(target=process_function, args=(app, user_id,))
+    process_threads[user_id] = process_thread
+    process_thread.start()
+    
+    if running_process.status == "active":
+        return jsonify({'status': 'Process already running'})
+    running_process.status = "running"
+    db.session.commit()
+    
+    return jsonify({'status': 'Process started'})
 
 
 @processes_bp.route('/api/get_process_status', methods=['GET'])
 @login_required
 def get_process_status():
     user_id = current_user.id
-    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id, ParsingProcess.status == "active").first()
-    return jsonify({"is_running": running_process is not None}), 200
+    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id).first()
+    return jsonify({"is_running": running_process is not None and running_process.status == "active"}), 200
 
 
 @processes_bp.route('/api/stop_process', methods=['POST'])
 @login_required
 def stop_process():
     user_id = current_user.id
-    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id, ParsingProcess.status == "active").first()
+    running_process = db.session.query(ParsingProcess).filter(ParsingProcess.user_id == user_id).first()
     if running_process is None:
         return jsonify({"status": "Process is not running now"})
 
