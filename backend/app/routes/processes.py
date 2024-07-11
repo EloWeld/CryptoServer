@@ -35,7 +35,7 @@ def start_process():
         except Exception as e:
             loguru.logger.error(str(e))
     
-    running_process.status = "running"
+    running_process.status = "active"
     db.session.commit()
     
     # И сделаем новый
