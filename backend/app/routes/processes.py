@@ -34,16 +34,15 @@ def start_process():
             del process_threads[user_id]
         except Exception as e:
             loguru.logger.error(str(e))
+    
+    running_process.status = "running"
+    db.session.commit()
+    
     # И сделаем новый
     app = current_app._get_current_object()  # Wattafock? Works! Magick!
     process_thread = threading.Thread(target=process_function, args=(app, user_id,))
     process_threads[user_id] = process_thread
     process_thread.start()
-    
-    if running_process.status == "active":
-        return jsonify({'status': 'Process already running'})
-    running_process.status = "running"
-    db.session.commit()
     
     return jsonify({'status': 'Process started'})
 
