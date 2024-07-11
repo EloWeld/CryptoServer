@@ -1,3 +1,4 @@
+import random
 import traceback
 
 from flask import current_app
@@ -51,18 +52,35 @@ def check_prices(app):
             try:
                 results = []
                 with lock:
-                    subquery = session.query(ChangesLog.user_id, func.max(ChangesLog.created_at).label('max_created_at')
-                                             ).join(ParsingProcess, ParsingProcess.user_id == ChangesLog.user_id).filter(ParsingProcess.status == "active").group_by(ChangesLog.user_id).subquery()
+                    
+                    subquery = session.query(
+                        ChangesLog.user_id,
+                        func.max(ChangesLog.created_at)
+                        .filter(ChangesLog.created_at > datetime.datetime.now() - datetime.timedelta(minutes=180))
+                        .label('max_created_at')
+                    ).join(
+                        ParsingProcess, ParsingProcess.user_id == ChangesLog.user_id
+                    ).filter(
+                        ParsingProcess.status == "active"
+                    ).group_by(
+                        ChangesLog.user_id
+                    ).subquery()
 
                     # Алиас для ChangesLog, чтобы соединить с подзапросом
                     cl_alias = aliased(ChangesLog)
 
                     # Запрос для получения последних логов для каждого user_id
-                    lastlogs = session.query(cl_alias).join(subquery, (cl_alias.user_id == subquery.c.user_id) & (cl_alias.created_at == subquery.c.max_created_at)).order_by(desc(cl_alias.created_at))
+                    lastlogs = session.query(cl_alias).join(
+                        subquery, (cl_alias.user_id == subquery.c.user_id) & (cl_alias.created_at == subquery.c.max_created_at)
+                    ).order_by(
+                        desc(cl_alias.created_at)
+                    )
 
                     # Пример для получения результатов
                     results = lastlogs.all()
 
+                if results and random.randint(0, 10) < 2:
+                    print('Yeah, we have results for check prices')
                 for log in results:
                     if log.curr_price is None:
                         continue
@@ -77,6 +95,7 @@ def check_prices(app):
                         continue
                     if not settings.reverse_last_order_dist or not settings.reverse_density or not settings.reverse_full_orders_count:
                         continue
+                    
                     # Filter too old logs
                     if datetime.datetime.now() - log.created_at > datetime.timedelta(minutes=settings.max_save_minutes):
                         continue
