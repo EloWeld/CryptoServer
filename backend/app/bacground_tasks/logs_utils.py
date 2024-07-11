@@ -75,18 +75,20 @@ def add_journal(data: dict, settings: Settings, user_id: str | int):
 
 def send_webhook(settings: Settings, symbol, data, minute, user_id):
     data_template = None
+    pref = ""
+    if 'subtype' in data and data['subtype'] == "reversal":
+        pref += "reverse_"
     if "rapid" in data['exchange']:
-        url = settings.rapid_pump_webhook if data['type'] == 'pump' else settings.rapid_dump_webhook
-        if 'subtype' in data and data['subtype'] == "reversal":
-            data_template: str = settings.reverse_rapid_pump_data if data['type'] == 'pump' else settings.reverse_rapid_dump_data
-        else:
-            data_template: str = settings.rapid_pump_data if data['type'] == 'pump' else settings.rapid_dump_data
+        pref += "rapid_"
     elif "smooth" in data['exchange']:
-        url = settings.smooth_pump_webhook if data['type'] == 'pump' else settings.smooth_dump_webhook
-        if 'subtype' in data and data['subtype'] == "reversal":
-            data_template: str = settings.reverse_smooth_pump_data if data['type'] == 'pump' else settings.reverse_smooth_dump_data
-        else:
-            data_template: str = settings.smooth_pump_data if data['type'] == 'pump' else settings.smooth_dump_data
+        pref += "smooth_"
+    if data['type'] == 'pump':
+        pref += "pump_"
+    elif data['type'] == 'dump':
+        pref += "dump_"
+    
+    url = getattr(settings, f"{pref}webhook")
+    data_template = getattr(settings, f"{pref}data")
             
     if data_template:
         data_for_send = data_template.replace('{{ticker}}', symbol)
@@ -98,10 +100,10 @@ def send_webhook(settings: Settings, symbol, data, minute, user_id):
     try:
         r = requests.post(url, headers={'Content-Type': "application/json"}, data=data_for_send)
         if r.status_code != 200:
-            add_journal({"type": "error", "message": "Не смог отправить вебхук", "detailed": r.text,
+            add_journal({"type": "error", "message": "Не смог отправить вебхук", "data_to_send":data_for_send, "detailed": r.text,
                         "symbol": symbol, "created_at": datetime.datetime.now()}, settings, user_id)
     except Exception as e:
-        add_journal({"type": "error", "message": "Ошибка при отправке вебхука", "detailed": str(
+        add_journal({"type": "error", "message": "Ошибка при отправке вебхука", "data_to_send":data_for_send, "detailed": str(
             e), "symbol": symbol, "created_at": datetime.datetime.now()}, settings, user_id)
 
 

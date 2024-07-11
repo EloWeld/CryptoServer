@@ -21,24 +21,28 @@ function Settings({ isAuthenticated, setIsAuthenticated }) {
 
     rapid_pump_webhook: '',
     rapid_pump_data: '',
+    reverse_rapid_pump_webhook: '',
     reverse_rapid_pump_data: '',
     rapid_enable_pump: false,
     reverse_rapid_enable_pump: false,
 
     rapid_dump_webhook: '',
     rapid_dump_data: '',
+    reverse_rapid_dump_webhook: '',
     reverse_rapid_dump_data: '',
     rapid_enable_dump: false,
     reverse_rapid_enable_dump: false,
 
     smooth_pump_webhook: '',
     smooth_pump_data: '',
+    reverse_smooth_pump_webhook: '',
     reverse_smooth_pump_data: '',
     smooth_enable_pump: false,
     reverse_smooth_enable_pump: false,
 
     smooth_dump_webhook: '',
     smooth_dump_data: '',
+    reverse_smooth_dump_webhook: '',
     reverse_smooth_dump_data: '',
     smooth_enable_dump: false,
     reverse_smooth_enable_dump: false,

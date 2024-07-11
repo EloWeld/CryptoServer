@@ -38,7 +38,7 @@ const WebhookSettings = ({ settings, handleChange, tabs, setTabs }) => {
                 />
             </div>)}
             {tabs.webhook === 'reverse' && (
-                <div class="flex flex-col gap-4" style={{}}>
+                <div className="flex flex-col gap-4" style={{}}>
                     <div>
                         <label className="whitespace-nowrap block text-sm font-medium text-gray-700">Объём USD при развороте</label>
                         <p className="block text-xs font-light text-gray-700 pt-0.5 pb-1">В отправляемых данных текст {"{{volume_usd}}"} будет заменён на это значение</p>
@@ -110,11 +110,12 @@ const WebhookTypeSettings = ({ settings, handleChange, type, title, reverse = fa
     if (reverse) {
         prefix = "reverse_".concat(prefix);
     }
+    console.log(`${prefix}_pump_webhook`);
     return (
         <div className="w-1/2">
 
             <h2 className="border-b-2 border-gray-300 text-lg font-bold mb-2">{title}</h2>
-            {!reverse && <div>
+            <div>
                 <label className="block text-sm font-medium text-gray-700">{reverse ? 'Reverse ' : ''}Pump Webhook</label>
                 <input
                     type="text"
@@ -123,7 +124,7 @@ const WebhookTypeSettings = ({ settings, handleChange, type, title, reverse = fa
                     onChange={handleChange}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
                 />
-            </div>}
+            </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700">{reverse ? 'Reverse ' : ''}Pump Data</label>
                 <textarea
@@ -146,7 +147,7 @@ const WebhookTypeSettings = ({ settings, handleChange, type, title, reverse = fa
                     Enable {reverse ? 'Reverse ' : ''}Pump
                 </label>
             </div>
-            {!reverse && <div>
+            <div>
                 <label className="block text-sm font-medium text-gray-700">{reverse ? 'Reverse ' : ''}Dump Webhook</label>
                 <input
                     type="text"
@@ -155,7 +156,7 @@ const WebhookTypeSettings = ({ settings, handleChange, type, title, reverse = fa
                     onChange={handleChange}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-1"
                 />
-            </div>}
+            </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700">{reverse ? 'Reverse ' : ''}Dump Data</label>
                 <textarea

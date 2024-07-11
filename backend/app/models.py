@@ -42,7 +42,9 @@ class Settings(db.Model):
     check_per_minutes_rapid: int
     rapid_delay: str
     rapid_pump_webhook: str
+    reverse_rapid_pump_webhook: str
     rapid_dump_webhook: str
+    reverse_rapid_dump_webhook: str
     rapid_pump_data: str
     rapid_dump_data: str
     rapid_enable_pump: bool
@@ -51,7 +53,9 @@ class Settings(db.Model):
     check_per_minutes_smooth: int
     smooth_delay: str
     smooth_pump_webhook: str
+    reverse_smooth_pump_webhook: str
     smooth_dump_webhook: str
+    reverse_smooth_dump_webhook: str
     smooth_pump_data: str
     smooth_dump_data: str
     smooth_enable_pump: bool
@@ -112,10 +116,15 @@ class Settings(db.Model):
     smooth_enable_pump = sa.Column(sa.Boolean, default=True)
     smooth_enable_dump = sa.Column(sa.Boolean, default=True)
 
+    reverse_rapid_pump_webhook = sa.Column(sa.String(255), default="https://hook.finandy.com/?")
+    reverse_rapid_dump_webhook = sa.Column(sa.String(255), default="https://hook.finandy.com/?")
     reverse_rapid_pump_data = sa.Column(sa.Text, default="{}")
     reverse_rapid_dump_data = sa.Column(sa.Text, default="{}")
     reverse_rapid_enable_pump = sa.Column(sa.Boolean, default=True)
     reverse_rapid_enable_dump = sa.Column(sa.Boolean, default=True)
+
+    reverse_smooth_pump_webhook = sa.Column(sa.String(255), default="https://hook.finandy.com/?")
+    reverse_smooth_dump_webhook = sa.Column(sa.String(255), default="https://hook.finandy.com/?")
     reverse_smooth_pump_data = sa.Column(sa.Text, default="{}")
     reverse_smooth_dump_data = sa.Column(sa.Text, default="{}")
     reverse_smooth_enable_pump = sa.Column(sa.Boolean, default=True)
