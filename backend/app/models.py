@@ -24,7 +24,7 @@ class ParsingProcess(db.Model):
     status: str
 
     id = sa.Column(sa.Integer, primary_key=True)
-    user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id'), nullable=False)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id', ondelete='cascade'), nullable=False)
     status = sa.Column(sa.String(150), nullable=False, default="active")
     started_at = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.now)
     ended_at = sa.Column(sa.DateTime, default=None, nullable=True)
@@ -92,7 +92,7 @@ class Settings(db.Model):
     coins_blacklist: list[str]
 
     id = sa.Column(sa.Integer, primary_key=True)
-    user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id'), nullable=False)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id', ondelete='cascade'), nullable=False)
     webhooks = sa.Column(sa.JSON, default=[])
     received_hooks = sa.Column(sa.JSON, default=[])
     blocked_hooks = sa.Column(sa.Integer, default=0)
@@ -169,7 +169,7 @@ class ChangesLog(db.Model):
     additional_data: dict
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-    user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id'), nullable=False)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey('user.id', ondelete='cascade'), nullable=False)
     exchange = sa.Column(sa.String(255), nullable=True)
     symbol = sa.Column(sa.String(50), nullable=True)
     type = sa.Column(sa.String(255), nullable=True)  # pump or dump

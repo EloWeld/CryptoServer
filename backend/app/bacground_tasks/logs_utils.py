@@ -100,10 +100,10 @@ def send_webhook(settings: Settings, symbol, data, minute, user_id):
     try:
         r = requests.post(url, headers={'Content-Type': "application/json"}, data=data_for_send)
         if r.status_code != 200:
-            add_journal({"type": "error", "message": "Не смог отправить вебхук", "data_to_send":data_for_send, "detailed": r.text,
+            add_journal({"type": "error", "message": "Не смог отправить вебхук", "data_to_send":data_for_send, "used_url": url, "used_pathes": pref, "detailed": r.text,
                         "symbol": symbol, "created_at": datetime.datetime.now()}, settings, user_id)
     except Exception as e:
-        add_journal({"type": "error", "message": "Ошибка при отправке вебхука", "data_to_send":data_for_send, "detailed": str(
+        add_journal({"type": "error", "message": "Ошибка при отправке вебхука", "data_to_send":data_for_send, "used_url": url, "used_pathes": pref, "detailed": str(
             e), "symbol": symbol, "created_at": datetime.datetime.now()}, settings, user_id)
 
 

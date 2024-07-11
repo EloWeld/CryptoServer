@@ -1,55 +1,71 @@
-import ccxt
 import pandas as pd
-import time
+import numpy as np
+import ta
+from datetime import datetime, timedelta
 
-# Функция для получения исторических данных с Binance
+# Пример данных
 
+# Генерация данных
+date_rng = pd.date_range(start='2023-01-01', end='2023-01-31', freq='T')
+price_data = np.random.normal(loc=30000, scale=500, size=len(date_rng))
 
-def get_ohlcv_data(symbol, timeframe, limit):
-    exchange = ccxt.binance()
-    ohlcv = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
-    df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-    df.set_index('timestamp', inplace=True)
-    return df
+# Создание DataFrame
+df = pd.DataFrame(date_rng, columns=['timestamp'])
+df['price'] = price_data
 
-# Функция для определения тренда на основе скользящих средних и выявления точек смены тренда
+# Индикатор MACD
+df['MACD'] = ta.trend.macd(df['price'])
+df['Signal_Line'] = ta.trend.macd_signal(df['price'])
+df['MACD_Hist'] = ta.trend.macd_diff(df['price'])
 
+# Индикатор LongShort (для примера используем простой подход)
+df['LongShort'] = np.where(df['price'] > df['price'].shift(1), 1, -1)  # Простое направление цены
 
-def detect_trend_changes(df):
-    # Вычисление скользящих средних
-    df['SMA_7'] = df['close'].rolling(window=7).mean()
-    df['SMA_30'] = df['close'].rolling(window=30).mean()
-
-    trend_changes = []
-
-    # Проход по данным для выявления точек смены тренда
+# Генерация сигналов на основе пересечения индикаторов
+def generate_signals(df):
+    signals = []
     for i in range(1, len(df)):
-        previous_sma_7 = df['SMA_7'].iloc[i-1]
-        previous_sma_30 = df['SMA_30'].iloc[i-1]
-        current_sma_7 = df['SMA_7'].iloc[i]
-        current_sma_30 = df['SMA_30'].iloc[i]
+        if df['MACD'][i] > df['Signal_Line'][i] and df['LongShort'][i] == 1:
+            signals.append((df['timestamp'][i], 'Buy'))
+        elif df['MACD'][i] < df['Signal_Line'][i] and df['LongShort'][i] == -1:
+            signals.append((df['timestamp'][i], 'Sell'))
+    return signals
 
-        if pd.notna(previous_sma_7) and pd.notna(previous_sma_30) and pd.notna(current_sma_7) and pd.notna(current_sma_30):
-            if previous_sma_7 <= previous_sma_30 and current_sma_7 > current_sma_30:
-                # Смена тренда на восходящий
-                trend_changes.append([df.index[i], 'BULL'])
-            elif previous_sma_7 >= previous_sma_30 and current_sma_7 < current_sma_30:
-                # Смена тренда на нисходящий
-                trend_changes.append([df.index[i], 'BEAR'])
+signals = generate_signals(df)
+for signal in signals:
+    print(f"Timestamp: {signal[0]}, Signal: {signal[1]}")
 
-    return trend_changes
+import matplotlib.pyplot as plt
 
+# Отображение цен и индикаторов
+plt.figure(figsize=(14, 10))
 
-def get_trend_changes(symbol):
-    symbol = symbol
-    df = get_ohlcv_data(symbol, "1m", 300)
-    trend_changes = detect_trend_changes(df)
-    return trend_changes
+# Цена
+plt.subplot(3, 1, 1)
+plt.plot(df['timestamp'], df['price'], label='Price')
+plt.title('Price and Signals')
+plt.legend()
 
+# Сигналы
+buy_signals = [signal[0] for signal in signals if signal[1] == 'Buy']
+sell_signals = [signal[0] for signal in signals if signal[1] == 'Sell']
 
-if __name__ == "__main__":
-    tc = get_trend_changes("BTCUSDT")
+plt.scatter(buy_signals, df[df['timestamp'].isin(buy_signals)]['price'], marker='^', color='g', label='Buy Signal')
+plt.scatter(sell_signals, df[df['timestamp'].isin(sell_signals)]['price'], marker='v', color='r', label='Sell Signal')
+plt.legend()
 
-    for change in tc:
-        print(f"Timestamp: {change[0]}, Trend: {change[1]}")
+# MACD и Signal Line
+plt.subplot(3, 1, 2)
+plt.plot(df['timestamp'], df['MACD'], label='MACD')
+plt.plot(df['timestamp'], df['Signal_Line'], label='Signal Line')
+plt.title('MACD and Signal Line')
+plt.legend()
+
+# Гистограмма MACD
+plt.subplot(3, 1, 3)
+plt.bar(df['timestamp'], df['MACD_Hist'], label='MACD Histogram')
+plt.title('MACD Histogram')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
